@@ -1,6 +1,8 @@
 # Facepunch.Parse
 Context-free grammar parsing tool
 
+[![facepunchprivate MyGet Build Status](https://www.myget.org/BuildSource/Badge/facepunchprivate?identifier=9dfcc07e-1ef6-45ad-b503-efaf91a3dda3)](https://www.myget.org/)
+
 ## Example
 ### Parser
 
