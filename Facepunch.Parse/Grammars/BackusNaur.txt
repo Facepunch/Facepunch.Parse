@@ -1,0 +1,30 @@
+﻿Whitespace = /\s+/;
+
+#whitespace Whitespace
+
+Document = Sentence;
+Document = Sentence Document;
+
+Sentence = Word Period;
+Sentence = Word Sentence;
+
+Period = "." | "?" | "!";
+
+#endwhitespace
+
+Word = /[a-z]+/i;
+
+//
+
+Grammar = Definition | Definition Grammar;
+Definition = NonTerminal "=" Branch ";";
+Branch = Concat | Concat "|" Branch;
+Concat = Literal | Literal Concat;
+Literal = String | Regex | NonTerminal;
+NonTerminal = /[a-z0-9_]+/i;
+String = "\"" StringValue "\"";
+StringValue = /(\\[\\"rnt]|[^\\"])*/;
+Regex = "/" RegexValue "/" RegexOptions;
+RegexValue = /(\\.|[^\\])+/;
+RegexOptions = "" | RegexOption RegexOptions;
+RegexOption = "i";
