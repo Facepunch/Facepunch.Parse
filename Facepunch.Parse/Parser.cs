@@ -75,6 +75,9 @@ namespace Facepunch.Parse
         {
             var elem = new XElement(ElementName);
 
+            elem.SetAttributeValue("index", result.Index);
+            elem.SetAttributeValue("length", result.Length);
+
             if (result.InnerCount == 0)
             {
                 if (result.ErrorType > ParseError.SubParser)
