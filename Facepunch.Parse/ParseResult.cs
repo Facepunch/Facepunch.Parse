@@ -38,7 +38,7 @@ namespace Facepunch.Parse
         {
             get
             {
-                if (_lineNumber == 0) GetLineCol(Index, out _lineNumber, out _columnNumber);
+                if ( _lineNumber == 0 ) GetLineCol( Index, out _lineNumber, out _columnNumber );
                 return _lineNumber;
             }
         }
@@ -47,7 +47,7 @@ namespace Facepunch.Parse
         {
             get
             {
-                if (_columnNumber == 0) GetLineCol(Index, out _lineNumber, out _columnNumber);
+                if ( _columnNumber == 0 ) GetLineCol( Index, out _lineNumber, out _columnNumber );
                 return _columnNumber;
             }
         }
@@ -64,14 +64,16 @@ namespace Facepunch.Parse
         public int InnerCount => _inner.Count;
         public IEnumerable<ParseResult> Inner => _inner;
 
-        private void GetLineCol(int index, out int line, out int col)
+        public ParseResult this[ int index ] => _inner[index];
+
+        private void GetLineCol( int index, out int line, out int col )
         {
             line = 1;
             col = 1;
 
-            for (var i = 0; i < index; ++i)
+            for ( var i = 0; i < index; ++i )
             {
-                switch (_source[i])
+                switch ( _source[i] )
                 {
                     case '\r': col = 1; break;
                     case '\n': ++line; col = 1; break;
@@ -80,21 +82,21 @@ namespace Facepunch.Parse
             }
         }
 
-        internal ParseResult(string source, Parser parser)
+        internal ParseResult( string source, Parser parser )
         {
             _source = source;
             Parser = parser;
             Success = true;
         }
 
-        internal ParseResult(ParseResult parent, Parser parser)
-            : this(parent._source, parser)
+        internal ParseResult( ParseResult parent, Parser parser )
+            : this( parent._source, parser )
         {
             _parent = parent;
             Index = parent.Index + parent.Length;
         }
 
-        private bool IsIdentical(ParseResult other)
+        private bool IsIdentical( ParseResult other )
         {
             return other.Parser == Parser && other.Index == Index && other.Length == Length;
         }
@@ -102,9 +104,9 @@ namespace Facepunch.Parse
         public bool GetIsInfiniteRecursion()
         {
             var parent = this;
-            while ((parent = parent._parent) != null)
+            while ( (parent = parent._parent) != null )
             {
-                if (IsIdentical(parent))
+                if ( IsIdentical( parent ) )
                 {
                     return true;
                 }
@@ -113,27 +115,27 @@ namespace Facepunch.Parse
             return false;
         }
 
-        private List<ParseResult> GetErrors(List<ParseResult> dst = null)
+        private List<ParseResult> GetErrors( List<ParseResult> dst = null )
         {
-            if (_errorResults != null)
+            if ( _errorResults != null )
             {
-                if (dst != null) _errorResults.AddRange(_errorResults);
+                if ( dst != null ) _errorResults.AddRange( _errorResults );
 
                 return _errorResults;
             }
 
-            if (dst == null) dst = new List<ParseResult>();
+            if ( dst == null ) dst = new List<ParseResult>();
 
-            if (ErrorType == ParseError.None) return dst;
+            if ( ErrorType == ParseError.None ) return dst;
 
-            if (ErrorType != ParseError.SubParser)
+            if ( ErrorType != ParseError.SubParser )
             {
-                dst.Add(this);
+                dst.Add( this );
             }
 
-            foreach (var inner in _inner)
+            foreach ( var inner in _inner )
             {
-                dst = inner.GetErrors(dst);
+                dst = inner.GetErrors( dst );
             }
 
             return dst;
@@ -141,54 +143,54 @@ namespace Facepunch.Parse
 
         private string GetErrorMessage()
         {
-            if (_innerMessage != null) return _innerMessage;
+            if ( _innerMessage != null ) return _innerMessage;
 
             var errors = GetErrors();
-            if (errors.Count == 0)
+            if ( errors.Count == 0 )
             {
                 return _innerMessage = string.Empty;
             }
 
             var max = errors.Max(x => x.Index);
-            errors.RemoveAll(x => x.Index != max);
+            errors.RemoveAll( x => x.Index != max );
 
             var nonExpect = errors.FirstOrDefault(x => x.ErrorType != ParseError.ExpectedToken);
-            if (nonExpect != null) return _innerMessage = nonExpect.ErrorMessage;
+            if ( nonExpect != null ) return _innerMessage = nonExpect.ErrorMessage;
 
             var builder = new StringBuilder();
 
             var distinct = errors.Select(x => x._errorMessage).Distinct().ToArray();
-            for (var i = 0; i < distinct.Length; ++i)
+            for ( var i = 0; i < distinct.Length; ++i )
             {
-                if (i > 0)
+                if ( i > 0 )
                 {
-                    builder.Append(", ");
-                    if (i == distinct.Length - 1) builder.Append("or ");
+                    builder.Append( ", " );
+                    if ( i == distinct.Length - 1 ) builder.Append( "or " );
                 }
 
-                builder.Append(distinct[i]);
+                builder.Append( distinct[i] );
             }
 
             int line, col;
-            GetLineCol(errors[0].Index, out line, out col);
+            GetLineCol( errors[0].Index, out line, out col );
 
             return _innerMessage = $"Expected {builder} at ({line}, {col})";
         }
 
-        private bool ShouldFlattenInner(ParseResult result)
+        private bool ShouldFlattenInner( ParseResult result )
         {
-            if (result.Parser.FlattenHierarchy) return true;
-            if (result.Parser == Parser) return true;
+            if ( result.Parser.FlattenHierarchy ) return true;
+            if ( result.Parser == Parser ) return true;
             return false;
         }
 
-        private void AddInner(ParseResult result)
+        private void AddInner( ParseResult result )
         {
-            if (!ShouldFlattenInner(result))
+            if ( !ShouldFlattenInner( result ) )
             {
-                if (!result.Parser.OmitFromResult || !result.Success)
+                if ( !result.Parser.OmitFromResult || !result.Success )
                 {
-                    _inner.Add(result);
+                    _inner.Add( result );
                     result._parent = this;
                 }
 
@@ -197,13 +199,13 @@ namespace Facepunch.Parse
                 return;
             }
 
-            foreach (var inner in result.Inner)
+            foreach ( var inner in result.Inner )
             {
-                AddInner(inner);
+                AddInner( inner );
             }
         }
 
-        public bool Error(ParseError type, string message)
+        public bool Error( ParseError type, string message )
         {
             Success = false;
             ErrorType = type;
@@ -211,20 +213,20 @@ namespace Facepunch.Parse
             return false;
         }
 
-        public bool Error(ParseResult inner)
+        public bool Error( ParseResult inner )
         {
             Success = false;
             ErrorType = ParseError.SubParser;
-            AddInner(inner);
+            AddInner( inner );
             return false;
         }
 
-        public bool Read(string token)
+        public bool Read( string token )
         {
             var index = ReadPos;
-            for (var i = 0; i < token.Length; ++i, ++index)
+            for ( var i = 0; i < token.Length; ++i, ++index )
             {
-                if (index >= _source.Length || _source[index] != token[i])
+                if ( index >= _source.Length || _source[index] != token[i] )
                 {
                     return false;
                 }
@@ -234,70 +236,70 @@ namespace Facepunch.Parse
             return true;
         }
 
-        public bool Read(Regex regex)
+        public bool Read( Regex regex )
         {
             Match match;
-            return Read(regex, out match);
+            return Read( regex, out match );
         }
 
-        public bool Read(Regex regex, out Match match)
+        public bool Read( Regex regex, out Match match )
         {
-            match = regex.Match(_source, ReadPos);
-            if (!match.Success || match.Index != ReadPos) return false;
+            match = regex.Match( _source, ReadPos );
+            if ( !match.Success || match.Index != ReadPos ) return false;
             Length += match.Length;
             return true;
         }
 
-        public bool Read(Parser parser)
+        public bool Read( Parser parser )
         {
             var result = Peek(parser);
-            if (result.Success) Apply(result);
+            if ( result.Success ) Apply( result );
             return result.Success;
         }
 
-        public bool Read(Parser parser, out ParseResult result)
+        public bool Read( Parser parser, out ParseResult result )
         {
-            result = Peek(parser);
-            if (result.Success) Apply(result);
+            result = Peek( parser );
+            if ( result.Success ) Apply( result );
             return result.Success;
         }
 
-        public void Skip(ParseResult inner)
+        public void Skip( ParseResult inner )
         {
-            if (inner._parent != this) throw new ArgumentException();
-            if (inner.Index != ReadPos) throw new ArgumentException();
+            if ( inner._parent != this ) throw new ArgumentException();
+            if ( inner.Index != ReadPos ) throw new ArgumentException();
 
             Length = inner.ReadPos - Index;
         }
 
-        public void Apply(ParseResult inner)
+        public void Apply( ParseResult inner )
         {
-            if (inner._parent != this) throw new ArgumentException();
-            if (inner.Index != ReadPos) throw new ArgumentException();
+            if ( inner._parent != this ) throw new ArgumentException();
+            if ( inner.Index != ReadPos ) throw new ArgumentException();
 
-            AddInner(inner);
+            AddInner( inner );
         }
 
-        public ParseResult Peek(Parser parser)
+        public ParseResult Peek( Parser parser )
         {
             var inner = new ParseResult(this, parser);
-            parser.Parse(inner);
+            parser.Parse( inner );
             return inner;
         }
 
-        public bool IsBetterThan(ParseResult other)
+        public bool IsBetterThan( ParseResult other )
         {
             return other == null || ErrorType != ParseError.NullParser && ReadPos > other.ReadPos || other.ErrorType == ParseError.NullParser;
         }
 
         public XElement ToXElement()
         {
-            return Parser.ToXElement(this);
+            return Parser.ToXElement( this );
         }
 
         public override string ToString()
         {
-            return Success ? _source.Substring(Index, Length) : ErrorMessage;
+            return Success ? _source.Substring( Index, Length ) : ErrorMessage;
         }
     }
 }

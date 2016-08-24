@@ -14,52 +14,52 @@ namespace Facepunch.Parse
 
         public BranchParser() { }
 
-        public BranchParser(IEnumerable<Parser> inner)
+        public BranchParser( IEnumerable<Parser> inner )
         {
-            _inner.AddRange(inner);
+            _inner.AddRange( inner );
         }
 
-        public BranchParser(params Parser[] inner)
+        public BranchParser( params Parser[] inner )
         {
-            _inner.AddRange(inner);
+            _inner.AddRange( inner );
         }
 
-        public void Add(Parser inner)
+        public void Add( Parser inner )
         {
-            _inner.Add(inner);
+            _inner.Add( inner );
         }
 
-        public void AddRange(IEnumerable<Parser> inner)
+        public void AddRange( IEnumerable<Parser> inner )
         {
-            _inner.AddRange(inner);
+            _inner.AddRange( inner );
         }
 
-        public override bool Parse(ParseResult result)
+        public override bool Parse( ParseResult result )
         {
-            if (_inner.Count == 0) return false;
-            if (result.GetIsInfiniteRecursion()) return result.Error(ParseError.InvalidGrammar, "Grammar contains left recursion");
+            if ( _inner.Count == 0 ) return false;
+            if ( result.GetIsInfiniteRecursion() ) return result.Error( ParseError.InvalidGrammar, "Grammar contains left recursion" );
 
             ParseResult bestResult = null;
-            foreach (var parser in _inner)
+            foreach ( var parser in _inner )
             {
                 var inner = result.Peek(parser);
-                if (inner.IsBetterThan(bestResult)) bestResult = inner;
+                if ( inner.IsBetterThan( bestResult ) ) bestResult = inner;
             }
 
-            Debug.Assert(bestResult != null, "bestResult != null");
-            if (bestResult.Success)
+            Debug.Assert( bestResult != null, "bestResult != null" );
+            if ( bestResult.Success )
             {
-                result.Apply(bestResult);
+                result.Apply( bestResult );
                 return true;
             }
 
-            result.Error(bestResult);
+            result.Error( bestResult );
             return false;
         }
 
         public override string ToString()
         {
-            return string.Join(" | ", Inner.Select(x => x.ToString()));
+            return string.Join( " | ", Inner.Select( x => x.ToString() ) );
         }
     }
 }

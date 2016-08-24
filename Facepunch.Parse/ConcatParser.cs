@@ -26,19 +26,19 @@ namespace Facepunch.Parse
 
         public static IDisposable ForbidWhitespace()
         {
-            WhitespaceParserStack.Push(null);
+            WhitespaceParserStack.Push( null );
             return _sWhitespaceDisposable;
         }
 
-        public static IDisposable AllowWhitespace(Parser whitespaceParser)
+        public static IDisposable AllowWhitespace( Parser whitespaceParser )
         {
-            if (CurrentWhitespaceParser == null)
+            if ( CurrentWhitespaceParser == null )
             {
-                WhitespaceParserStack.Push(whitespaceParser);
+                WhitespaceParserStack.Push( whitespaceParser );
             }
             else
             {
-                WhitespaceParserStack.Push(CurrentWhitespaceParser | whitespaceParser);
+                WhitespaceParserStack.Push( CurrentWhitespaceParser | whitespaceParser );
             }
 
             return _sWhitespaceDisposable;
@@ -51,46 +51,49 @@ namespace Facepunch.Parse
 
         public IEnumerable<Parser> Inner => _inner;
 
-        public ConcatParser(IEnumerable<Parser> inner)
+        public ConcatParser( IEnumerable<Parser> inner )
         {
-            AddRange(inner);
+            AddRange( inner );
         }
 
-        public ConcatParser(params Parser[] inner)
+        public ConcatParser( params Parser[] inner )
         {
-            AddRange(inner);
+            AddRange( inner );
         }
 
-        public void Add(Parser inner)
+        public void Add( Parser inner )
         {
-            _inner.Add(inner);
+            _inner.Add( inner );
         }
 
-        public void AddRange(IEnumerable<Parser> inner)
+        public void AddRange( IEnumerable<Parser> inner )
         {
-            foreach (var parser in inner)
+            foreach ( var parser in inner )
             {
-                Add(parser);
+                Add( parser );
             }
         }
 
-        public override bool Parse(ParseResult result)
+        public override bool Parse( ParseResult result )
         {
-            if (_inner.Count == 0) return false;
+            if ( _inner.Count == 0 ) return false;
 
-            foreach (var parser in _inner)
+            var first = result.Index != 0;
+            foreach ( var parser in _inner )
             {
-                if (_whitespaceParser != null)
+                if ( _whitespaceParser != null && !first )
                 {
                     ParseResult whitespace;
-                    while ((whitespace = result.Peek(_whitespaceParser)).Success)
+                    while ( (whitespace = result.Peek( _whitespaceParser )).Success )
                     {
-                        result.Skip(whitespace);
+                        result.Skip( whitespace );
                     }
                 }
 
+                first = false;
+
                 ParseResult inner;
-                if (!result.Read(parser, out inner)) return result.Error(inner);
+                if ( !result.Read( parser, out inner ) ) return result.Error( inner );
             }
 
             return true;
@@ -98,7 +101,7 @@ namespace Facepunch.Parse
 
         public override string ToString()
         {
-            return string.Join(" ", Inner.Select(x => x.ToString()));
+            return string.Join( " ", Inner.Select( x => x.ToString() ) );
         }
     }
 }

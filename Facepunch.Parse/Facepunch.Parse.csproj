@@ -42,6 +42,8 @@
   <ItemGroup>
     <Compile Include="BranchParser.cs" />
     <Compile Include="ConcatParser.cs" />
+    <Compile Include="CustomParser.cs" />
+    <Compile Include="GrammarParser.cs" />
     <Compile Include="NamedParser.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="ParseResult.cs" />

@@ -1,37 +1,60 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Facepunch.Parse
 {
     public interface INamedParserResolver
     {
-        Parser Resolve(NamedParser named);
+        Parser Resolve( NamedParser named );
     }
 
-    public sealed class NamedParser : Parser
+    public class NamedParser : Parser
     {
+        private static readonly Dictionary<Type, NamedParser> _sSingletons = new Dictionary<Type, NamedParser>();
+
+        public static TParser Get<TParser>()
+            where TParser : NamedParser, new()
+        {
+            var type = typeof (TParser);
+            NamedParser singleton;
+            if ( _sSingletons.TryGetValue( type, out singleton ) ) return (TParser) singleton;
+
+            singleton = new TParser();
+            _sSingletons.Add( type, singleton );
+            return (TParser) singleton;
+        }
+
         private Parser _resolvedParser;
 
         public string Name { get; }
         public INamedParserResolver Resolver { get; }
 
-        public Parser ResolvedParser => _resolvedParser ?? (_resolvedParser = Resolver.Resolve(this));
+        public Parser ResolvedParser => _resolvedParser ?? (_resolvedParser = Value);
 
-        public void Resolve(Parser value)
+        protected virtual Parser Value => Resolver?.Resolve( this );
+
+        public void Resolve( Parser value )
         {
             _resolvedParser = value;
         }
 
-        public NamedParser(string name, INamedParserResolver resolver = null)
+        protected NamedParser()
+        {
+            Name = GetType().Name;
+            Resolver = null;
+        }
+
+        public NamedParser( string name, INamedParserResolver resolver = null )
         {
             Name = name;
             Resolver = resolver;
         }
 
-        public override bool Parse(ParseResult result)
+        public override bool Parse( ParseResult result )
         {
-            if (ResolvedParser == null) throw new Exception($"Could not resolve parser with name '{Name}'");
+            if ( ResolvedParser == null ) throw new Exception( $"Could not resolve parser with name '{Name}'" );
 
-            return ResolvedParser.Parse(result);
+            return ResolvedParser.Parse( result );
         }
 
         protected override string ElementName => Name;

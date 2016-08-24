@@ -1,6 +1,6 @@
 ﻿Whitespace = /\s+/;
 
-#whitespace Whitespace
+#pushignore Whitespace
 
 Document = Sentence;
 Document = Sentence Document;
@@ -10,21 +10,30 @@ Sentence = Word Sentence;
 
 Period = "." | "?" | "!";
 
-#endwhitespace
+#popignore
 
 Word = /[a-z]+/i;
 
 //
 
-Grammar = Definition | Definition Grammar;
+Ignore = Whitespace | SingleLineComment | MultiLineComment;
+Whitespace = /\s/;
+SingleLineComment = /\/\/[^\n]*\n/;
+MultiLineComment = /\/\*([^*]|\*[^/])*\*\//;
+
+Grammar = Statement | Statement Grammar;
+Statement = Definition | Preprocessor;
+Preprocessor = "#" (PushIgnore | PopIgnore);
+PushIgnore = "pushignore" NonTerminal;
+PopIgnore = "popignore";
 Definition = NonTerminal "=" Branch ";";
 Branch = Concat | Concat "|" Branch;
-Concat = Literal | Literal Concat;
-Literal = String | Regex | NonTerminal;
+Concat = Term | Term Concat;
+Term = String | Regex | NonTerminal | "(" Branch ")";
 NonTerminal = /[a-z0-9_]+/i;
 String = "\"" StringValue "\"";
 StringValue = /(\\[\\"rnt]|[^\\"])*/;
 Regex = "/" RegexValue "/" RegexOptions;
-RegexValue = /(\\.|[^\\])+/;
+RegexValue = /(\\.|\[[^\]]+\]|[^\\[\/])+/;
 RegexOptions = "" | RegexOption RegexOptions;
 RegexOption = "i";
