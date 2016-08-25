@@ -56,6 +56,8 @@ namespace Facepunch.Parse
 
         public bool Success { get; private set; }
 
+        public string Value => _source.Substring( Index, Length );
+
         public string ErrorMessage => GetErrorMessage();
         public ParseError ErrorType { get; private set; }
 
@@ -174,7 +176,7 @@ namespace Facepunch.Parse
             int line, col;
             GetLineCol( errors[0].Index, out line, out col );
 
-            return _innerMessage = $"Expected {builder} at ({line}, {col})";
+            return _innerMessage = $"Expected {builder}";
         }
 
         private bool ShouldFlattenInner( ParseResult result )

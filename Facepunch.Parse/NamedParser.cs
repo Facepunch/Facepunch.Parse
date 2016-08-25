@@ -29,6 +29,8 @@ namespace Facepunch.Parse
         public string Name { get; }
         public INamedParserResolver Resolver { get; }
 
+        public bool IsResolved => _resolvedParser != null;
+
         public Parser ResolvedParser => _resolvedParser ?? (_resolvedParser = Value);
 
         protected virtual Parser Value => Resolver?.Resolve( this );
