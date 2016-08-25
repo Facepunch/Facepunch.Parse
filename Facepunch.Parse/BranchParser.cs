@@ -39,10 +39,13 @@ namespace Facepunch.Parse
             if ( _inner.Count == 0 ) return false;
             if ( result.GetIsInfiniteRecursion() ) return result.Error( ParseError.InvalidGrammar, "Grammar contains left recursion" );
 
+            var results = new List<ParseResult>();
+
             ParseResult bestResult = null;
             foreach ( var parser in _inner )
             {
                 var inner = result.Peek(parser);
+                results.Add( inner );
                 if ( inner.IsBetterThan( bestResult ) ) bestResult = inner;
             }
 
@@ -53,7 +56,10 @@ namespace Facepunch.Parse
                 return true;
             }
 
-            result.Error( bestResult );
+            foreach ( var parseResult in results )
+            {
+                result.Error( parseResult );
+            }
             return false;
         }
 

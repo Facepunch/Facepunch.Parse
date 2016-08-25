@@ -198,6 +198,13 @@ namespace Facepunch.Parse
 
                 Length = result.ReadPos - Index;
                 Success &= result.Success;
+
+                if ( result.ErrorType == ParseError.ExpectedToken && result.Parser is RegexParser && Parser is NamedParser )
+                {
+                    ErrorType = ParseError.ExpectedToken;
+                    var named = (NamedParser) Parser;
+                    _errorMessage = named.Name;
+                }
                 return;
             }
 

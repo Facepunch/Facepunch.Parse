@@ -11,7 +11,7 @@ namespace Facepunch.Parse.Test
 
             Debug.WriteLine( $"# Input:\r\n{input}" );
             Debug.WriteLine( $"# Output:\r\n{result.ToXElement()}" );
-            Debug.WriteLine( $"# Success: {result.Success}" );
+            Debug.WriteLine( $"# Success: {result.Success}" + (!result.Success ? result.ErrorMessage : "") );
 
             Assert.AreEqual( shouldSucceed, result.Success );
         }

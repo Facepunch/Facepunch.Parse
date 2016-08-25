@@ -24,6 +24,11 @@ namespace Facepunch.Parse.Test
             " );
 
             TestHelper.Test( grammar["Document"], "Hello world! How are you? Testing testing testing testing.", true );
+            TestHelper.Test( grammar["Document"], "Hello world! How are you? Testing testing-testing testing.", false );
+            TestHelper.Test( grammar["Word"], "Testing", true );
+            TestHelper.Test( grammar["Word"], "?", false );
+            TestHelper.Test( grammar["Period"], "?", true );
+            TestHelper.Test( grammar["Period"], " ", false );
         }
     }
 }
