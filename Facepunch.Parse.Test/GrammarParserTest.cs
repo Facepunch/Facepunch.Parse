@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Facepunch.Parse.Test
 {
@@ -7,10 +6,33 @@ namespace Facepunch.Parse.Test
     public class GrammarParserTest
     {
         [TestMethod]
-        public void BasicGrammarParser()
+        public void GrammarParserString1()
         {
-            var parser = new GrammarParser();
-            var result = parser.Parse( @"
+            TestHelper.Test( new GrammarParser(), "Document = \"A\";", true );
+        }
+
+        [TestMethod]
+        public void GrammarParserString2()
+        {
+            TestHelper.Test( new GrammarParser(), "Document = \"\\\"\";", true );
+        }
+
+        [TestMethod]
+        public void GrammarParserString3()
+        {
+            TestHelper.Test( new GrammarParser(), "Document = \"\\\";", false );
+        }
+
+        [TestMethod]
+        public void GrammarParserString4()
+        {
+            TestHelper.Test( new GrammarParser(), "Document = \"\\\\\";", true );
+        }
+
+        [TestMethod]
+        public void GrammarParserComplex1()
+        {
+            TestHelper.Test( new GrammarParser(), @"
                 Whitespace = /\s+/;
                 Word = /[a-z]+/i;
                 Period = ""."" | ""?"" | ""!"";
@@ -23,11 +45,7 @@ namespace Facepunch.Parse.Test
                     Sentence = Word Period;
                     Sentence = Word Sentence;
                 }
-                " );
-
-            Debug.WriteLine( result.ToXElement() );
-
-            Assert.IsTrue( result.Success );
+            ", true );
         }
     }
 }

@@ -17,6 +17,8 @@ namespace Facepunch.Parse
         private static readonly WhitespaceDisposable _sWhitespaceDisposable = new WhitespaceDisposable();
         private static Parser CurrentWhitespaceParser => WhitespaceParserStack.Count == 0 ? null : WhitespaceParserStack.Peek();
 
+        public static Parser EndOfInput { get; } = new RegexParser( new Regex( "$", RegexOptions.Compiled ) );
+
         private class WhitespaceDisposable : IDisposable
         {
             public void Dispose()

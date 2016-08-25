@@ -254,6 +254,7 @@ namespace Facepunch.Parse
         {
             var result = Peek(parser);
             if ( result.Success ) Apply( result );
+            else Error( result );
             return result.Success;
         }
 
@@ -261,6 +262,7 @@ namespace Facepunch.Parse
         {
             result = Peek( parser );
             if ( result.Success ) Apply( result );
+            else Error( result );
             return result.Success;
         }
 
@@ -289,7 +291,7 @@ namespace Facepunch.Parse
 
         public bool IsBetterThan( ParseResult other )
         {
-            return other == null || ErrorType != ParseError.NullParser && ReadPos > other.ReadPos || other.ErrorType == ParseError.NullParser;
+            return other == null || ErrorType != ParseError.NullParser && (ReadPos > other.ReadPos || ReadPos == other.ReadPos && Success && !other.Success) || other.ErrorType == ParseError.NullParser;
         }
 
         public XElement ToXElement()

@@ -22,49 +22,49 @@ namespace Facepunch.Parse.Test
         [TestMethod]
         public void BasicWhitespace1()
         {
-            Assert.IsTrue( CreateParser().Parse( "AA" ).Success );
+            TestHelper.Test( CreateParser(), "AA", true );
         }
 
         [TestMethod]
         public void BasicWhitespace2()
         {
-            Assert.IsTrue( CreateParser().Parse( "A A" ).Success );
+            TestHelper.Test( CreateParser(), "A A", true );
         }
 
         [TestMethod]
         public void BasicWhitespace3()
         {
-            Assert.IsTrue( CreateParser().Parse( " AA" ).Success );
+            TestHelper.Test( CreateParser(), " AA", true ); 
         }
 
         [TestMethod]
         public void BasicWhitespace4()
         {
-            Assert.IsTrue( CreateParser().Parse( "AA " ).Success );
+            TestHelper.Test( CreateParser(), "AA ", true );
         }
 
         [TestMethod]
         public void BasicWhitespace5()
         {
-            Assert.IsTrue( CreateParser().Parse( "A  A" ).Success );
+            TestHelper.Test( CreateParser(), "A  A", true );
         }
 
         [TestMethod]
         public void BasicWhitespace6()
         {
-            Assert.IsTrue( CreateParser().Parse( "   A    A          " ).Success );
+            TestHelper.Test( CreateParser(), "   A    A          ", true );
         }
 
         [TestMethod]
         public void BasicWhitespace7()
         {
-            Assert.IsFalse( CreateParser().Parse( "   A    B          " ).Success );
+            TestHelper.Test( CreateParser(), "   A    B          ", false );
         }
 
         [TestMethod]
         public void BasicWhitespace8()
         {
-            Assert.IsFalse( CreateParser().Parse( "   A  \t  A          " ).Success );
+            TestHelper.Test( CreateParser(), "   A  \t  A          ", false );
         }
     }
 }

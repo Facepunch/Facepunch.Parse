@@ -40,16 +40,16 @@ namespace Facepunch.Parse
 
             using ( AllowWhitespace( Ignore ) )
             {
-                this[StatementBlock] = Statement | (Statement + StatementBlock);
+                this[StatementBlock] = Statement + (StatementBlock | "");
                 this[Statement] = Definition | IgnoreBlock;
                 this[IgnoreBlock] = "ignore" + Branch + "{" + StatementBlock + "}";
                 this[Definition] = NonTerminal + "=" + Branch + ";";
-                this[Branch] = Concat | (Concat + "|" + Branch);
-                this[Concat] = Term | (Term + Concat);
+                this[Branch] = Concat + (("|" + Branch) | "");
+                this[Concat] = Term + (Concat | "");
                 this[Term] = String | Regex | NonTerminal | "(" + Branch + ")";
             }
 
-            return StatementBlock;
+            return StatementBlock + EndOfInput;
         }
     }
 }
