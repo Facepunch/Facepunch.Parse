@@ -6,7 +6,9 @@ namespace Facepunch.Parse
     {
         public static EmptyParser Instance { get; } = new EmptyParser();
 
-        public override bool Parse( ParseResult result )
+        public override bool OmitFromResult => true;
+
+        protected override bool OnParse( ParseResult result )
         {
             return true;
         }
@@ -16,7 +18,7 @@ namespace Facepunch.Parse
     {
         public static NullParser Instance { get; } = new NullParser();
 
-        public override bool Parse( ParseResult result )
+        protected override bool OnParse( ParseResult result )
         {
             return result.Error( ParseError.NullParser, null );
         }
@@ -32,7 +34,7 @@ namespace Facepunch.Parse
             Token = token;
         }
 
-        public override bool Parse( ParseResult result )
+        protected override bool OnParse( ParseResult result )
         {
             return result.Read( Token ) || result.Error( ParseError.ExpectedToken, $"'{Token}'" );
         }
@@ -52,7 +54,7 @@ namespace Facepunch.Parse
             Regex = regex;
         }
 
-        public override bool Parse( ParseResult result )
+        protected override bool OnParse( ParseResult result )
         {
             return result.Read( Regex ) || result.Error( ParseError.ExpectedToken, $"/{Regex}/" );
         }

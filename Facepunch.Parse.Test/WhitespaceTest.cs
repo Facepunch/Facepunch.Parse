@@ -1,32 +1,70 @@
-﻿using System;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Facepunch.Parse.Test
 {
     [TestClass]
     public class WhitespaceTest
     {
-        [TestMethod]
-        public void BasicWhitespace()
+        private Parser CreateParser()
         {
             var document = new NamedParser( "Document" );
-            var sentence = new NamedParser( "Sentence" );
-            var period = new NamedParser( "Period" );
             var word = new NamedParser( "Word" );
 
-            using ( ConcatParser.AllowWhitespace( " " ) )
+            using ( Parser.AllowWhitespace( " " ) )
             {
-                document.Resolve( sentence | (sentence + document) );
-                sentence.Resolve( (word + period) | (word + sentence) );
-                period.Resolve( (Parser) "." | "?" | "!" );
-                word.Resolve( new Regex( "[a-z]+", RegexOptions.IgnoreCase ) );
+                document.Resolve( word + word );
+                word.Resolve( "A" );
             }
 
-            Assert.IsTrue( document.Parse( "Hello world! How are you doing today? This is another sentence. Testing." ).Success );
-            Assert.IsFalse( document.Parse( "Hello world, How are you doing today? This is another sentence. Testing." ).Success );
-            Assert.IsFalse( document.Parse( "Hello world! How are you doing today? This is another sentence. Testing" ).Success );
+            return document;
+        }
+
+        [TestMethod]
+        public void BasicWhitespace1()
+        {
+            Assert.IsTrue( CreateParser().Parse( "AA" ).Success );
+        }
+
+        [TestMethod]
+        public void BasicWhitespace2()
+        {
+            Assert.IsTrue( CreateParser().Parse( "A A" ).Success );
+        }
+
+        [TestMethod]
+        public void BasicWhitespace3()
+        {
+            Assert.IsTrue( CreateParser().Parse( " AA" ).Success );
+        }
+
+        [TestMethod]
+        public void BasicWhitespace4()
+        {
+            Assert.IsTrue( CreateParser().Parse( "AA " ).Success );
+        }
+
+        [TestMethod]
+        public void BasicWhitespace5()
+        {
+            Assert.IsTrue( CreateParser().Parse( "A  A" ).Success );
+        }
+
+        [TestMethod]
+        public void BasicWhitespace6()
+        {
+            Assert.IsTrue( CreateParser().Parse( "   A    A          " ).Success );
+        }
+
+        [TestMethod]
+        public void BasicWhitespace7()
+        {
+            Assert.IsFalse( CreateParser().Parse( "   A    B          " ).Success );
+        }
+
+        [TestMethod]
+        public void BasicWhitespace8()
+        {
+            Assert.IsFalse( CreateParser().Parse( "   A  \t  A          " ).Success );
         }
     }
 }

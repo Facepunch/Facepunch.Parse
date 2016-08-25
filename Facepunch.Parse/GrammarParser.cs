@@ -8,11 +8,9 @@ namespace Facepunch.Parse
         public NamedParser Whitespace;
         public NamedParser SingleLineComment;
         public NamedParser MultiLineComment;
-        public NamedParser Grammar;
+        public NamedParser StatementBlock;
         public NamedParser Statement;
         public NamedParser IgnoreBlock;
-        public NamedParser PushIgnore;
-        public NamedParser PopIgnore;
         public NamedParser Definition;
         public NamedParser Branch;
         public NamedParser Concat;
@@ -29,8 +27,8 @@ namespace Facepunch.Parse
         {
             this[Ignore] = Whitespace | SingleLineComment | MultiLineComment;
             this[Whitespace] = new Regex( @"\s" );
-            this[SingleLineComment] =  new Regex( @"//[^\n]*(\n|$)") ;
-            this[MultiLineComment] = new Regex( @"/\*([^*]|\*[^/])*\*/");
+            this[SingleLineComment] = new Regex( @"//[^\n]*(\n|$)" );
+            this[MultiLineComment] = new Regex( @"/\*([^*]|\*[^/])*\*/" );
 
             this[NonTerminal] = new Regex( @"[a-z0-9_]+", System.Text.RegularExpressions.RegexOptions.IgnoreCase );
             this[String] = "\"" + StringValue + "\"";
@@ -40,20 +38,18 @@ namespace Facepunch.Parse
             this[RegexOptions] = "" | (RegexOption + RegexOptions);
             this[RegexOption] = "i";
 
-            using ( ConcatParser.AllowWhitespace( Ignore ) )
+            using ( AllowWhitespace( Ignore ) )
             {
-                this[Grammar] = Statement | (Statement + Grammar);
+                this[StatementBlock] = Statement | (Statement + StatementBlock);
                 this[Statement] = Definition | IgnoreBlock;
-                this[IgnoreBlock] = PushIgnore + Grammar + PopIgnore;
-                this[PushIgnore] = "#pushignore" + NonTerminal;
-                this[PopIgnore] = "popignore";
+                this[IgnoreBlock] = "ignore" + Branch + "{" + StatementBlock + "}";
                 this[Definition] = NonTerminal + "=" + Branch + ";";
                 this[Branch] = Concat | (Concat + "|" + Branch);
                 this[Concat] = Term | (Term + Concat);
                 this[Term] = String | Regex | NonTerminal | "(" + Branch + ")";
             }
 
-            return Grammar;
+            return StatementBlock;
         }
     }
 }

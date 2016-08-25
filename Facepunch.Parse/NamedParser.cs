@@ -50,7 +50,7 @@ namespace Facepunch.Parse
             Resolver = resolver;
         }
 
-        public override bool Parse( ParseResult result )
+        protected override bool OnParse( ParseResult result )
         {
             if ( ResolvedParser == null ) throw new Exception( $"Could not resolve parser with name '{Name}'" );
 

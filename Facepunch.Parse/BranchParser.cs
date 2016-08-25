@@ -34,7 +34,7 @@ namespace Facepunch.Parse
             _inner.AddRange( inner );
         }
 
-        public override bool Parse( ParseResult result )
+        protected override bool OnParse( ParseResult result )
         {
             if ( _inner.Count == 0 ) return false;
             if ( result.GetIsInfiniteRecursion() ) return result.Error( ParseError.InvalidGrammar, "Grammar contains left recursion" );

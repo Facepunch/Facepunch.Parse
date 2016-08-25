@@ -1,10 +1,50 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Facepunch.Parse
 {
     public abstract class Parser
     {
+        [ThreadStatic]
+        private static Stack<Parser> _sWhitespaceParserStack;
+        private static Stack<Parser> WhitespaceParserStack
+        {
+            get { return _sWhitespaceParserStack ?? (_sWhitespaceParserStack = new Stack<Parser>()); }
+        }
+
+        private static readonly WhitespaceDisposable _sWhitespaceDisposable = new WhitespaceDisposable();
+        private static Parser CurrentWhitespaceParser => WhitespaceParserStack.Count == 0 ? null : WhitespaceParserStack.Peek();
+
+        private class WhitespaceDisposable : IDisposable
+        {
+            public void Dispose()
+            {
+                WhitespaceParserStack.Pop();
+            }
+        }
+
+        public static IDisposable ForbidWhitespace()
+        {
+            WhitespaceParserStack.Push( null );
+            return _sWhitespaceDisposable;
+        }
+
+        public static IDisposable AllowWhitespace( Parser whitespaceParser )
+        {
+            if ( CurrentWhitespaceParser == null )
+            {
+                WhitespaceParserStack.Push( whitespaceParser );
+            }
+            else
+            {
+                WhitespaceParserStack.Push( CurrentWhitespaceParser | whitespaceParser );
+            }
+
+            return _sWhitespaceDisposable;
+        }
+
         public static implicit operator Parser( string token )
         {
             if ( token.Length == 0 ) return EmptyParser.Instance;
@@ -49,10 +89,31 @@ namespace Facepunch.Parse
             return result;
         }
 
+        private readonly Parser _whitespaceParser = CurrentWhitespaceParser;
+
         public virtual bool FlattenHierarchy { get; } = false;
         public virtual bool OmitFromResult { get; } = false;
 
-        public abstract bool Parse( ParseResult result );
+        protected abstract bool OnParse( ParseResult result );
+
+        private void SkipWhitespace(ParseResult result)
+        {
+            if ( _whitespaceParser == null ) return;
+
+            ParseResult whitespace;
+            while ( (whitespace = result.Peek( _whitespaceParser )).Success )
+            {
+                result.Skip( whitespace );
+            }
+        }
+
+        public bool Parse( ParseResult result )
+        {
+            SkipWhitespace( result );
+            if ( !OnParse( result ) ) return false;
+            SkipWhitespace( result );
+            return true;
+        }
 
         private string _elementName;
         protected virtual string ElementName

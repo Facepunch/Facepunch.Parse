@@ -12,20 +12,18 @@ namespace Facepunch.Parse.Test
             var parser = new GrammarParser();
             var result = parser.Parse( @"
                 Whitespace = /\s+/;
-
-                #pushignore Whitespace
-
-                Document = Sentence;
-                Document = Sentence | Document;
-
-                Sentence = Word Period;
-                Sentence = Word Sentence;
-
+                Word = /[a-z]+/i;
                 Period = ""."" | ""?"" | ""!"";
 
-                #popignore
+                ignore Whitespace
+                {
+                    Document = Sentence;
+                    Document = Sentence | Document;
 
-                Word = /[a-z]+/i;" );
+                    Sentence = Word Period;
+                    Sentence = Word Sentence;
+                }
+                " );
 
             Debug.WriteLine( result.ToXElement() );
 
