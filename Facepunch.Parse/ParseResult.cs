@@ -33,7 +33,10 @@ namespace Facepunch.Parse
         public Parser Parser { get; }
 
         public int Index { get; }
+        public int TrimmedIndex { get; private set; }
+
         public int Length { get; private set; }
+        public int TrimmedLength { get; private set; }
 
         public int LineNumber
         {
@@ -57,7 +60,7 @@ namespace Facepunch.Parse
 
         public bool Success { get; private set; }
 
-        public string Value => _source.Substring( Index, Length );
+        public string Value => _source.Substring( TrimmedIndex, TrimmedLength );
 
         public string ErrorMessage => GetErrorMessage();
         public ParseError ErrorType { get; private set; }
@@ -114,7 +117,7 @@ namespace Facepunch.Parse
             : this( parent._source, parser )
         {
             _parent = parent;
-            Index = parent.Index + parent.Length;
+            TrimmedIndex = Index = parent.Index + parent.Length;
         }
 
         private bool IsIdentical( ParseResult other )
@@ -215,7 +218,11 @@ namespace Facepunch.Parse
         private void AddInner( ParseResult result )
         {
             var len = result.ReadPos - Index;
-            if ( Length < len ) Length = len;
+            if ( Length < len )
+            {
+                Length = len;
+                TrimmedLength = result.ReadPos - TrimmedIndex;
+            }
 
             Success &= result.Success;
 
@@ -267,6 +274,7 @@ namespace Facepunch.Parse
             }
 
             Length += token.Length;
+            TrimmedLength += token.Length;
             return true;
         }
 
@@ -281,6 +289,7 @@ namespace Facepunch.Parse
             match = regex.Match( _source, ReadPos );
             if ( !match.Success || match.Index != ReadPos ) return false;
             Length += match.Length;
+            TrimmedLength += match.Length;
             return true;
         }
 
@@ -298,6 +307,7 @@ namespace Facepunch.Parse
             if ( inner.Index != ReadPos ) throw new ArgumentException();
 
             Length = inner.ReadPos - Index;
+            if ( TrimmedLength == 0 ) TrimmedIndex = inner.ReadPos;
         }
 
         public void Apply( ParseResult inner )
@@ -327,7 +337,7 @@ namespace Facepunch.Parse
 
         public override string ToString()
         {
-            return Success ? _source.Substring( Index, Length ) : ErrorMessage;
+            return Success ? _source.Substring( TrimmedIndex, TrimmedLength ) : ErrorMessage;
         }
     }
 }

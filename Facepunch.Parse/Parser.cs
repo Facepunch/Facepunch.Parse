@@ -138,8 +138,8 @@ namespace Facepunch.Parse
         {
             var elem = new XElement(ElementName);
 
-            elem.SetAttributeValue( "index", result.Index );
-            elem.SetAttributeValue( "length", result.Length );
+            elem.SetAttributeValue( "index", result.TrimmedIndex );
+            elem.SetAttributeValue( "length", result.TrimmedLength );
 
             if ( result.InnerCount == 0 )
             {
