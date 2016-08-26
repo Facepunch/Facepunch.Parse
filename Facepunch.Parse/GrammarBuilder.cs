@@ -85,8 +85,13 @@ namespace Facepunch.Parse
             var splitIndex = named.Namespace.Length;
             while (true)
             {
-                var existing = GetExisting( splitIndex <= 0 ? named.Name : $"{named.Namespace.Substring( 0, splitIndex )}.{named.Name}" );
-                if ( existing != null ) return existing;
+                var name = splitIndex <= 0 ? named.Name : $"{named.Namespace.Substring( 0, splitIndex )}.{named.Name}";
+                var existing = GetExisting( name );
+                if ( existing != null )
+                {
+                    named.ResolvedName = name;
+                    return existing;
+                }
                 if ( splitIndex <= 0 ) break;
 
                 splitIndex = named.Namespace.LastIndexOf( ".", splitIndex - 1 );

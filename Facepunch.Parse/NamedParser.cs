@@ -31,6 +31,8 @@ namespace Facepunch.Parse
         public string Namespace { get; }
         public INamedParserResolver Resolver { get; }
 
+        public string ResolvedName { get; set; }
+
         public bool IsResolved => _resolvedParser != null;
 
         public Parser ResolvedParser => _resolvedParser ?? (_resolvedParser = Value);
@@ -64,7 +66,7 @@ namespace Facepunch.Parse
             return ResolvedParser.Parse( result );
         }
 
-        protected override string ElementName => Name;
+        protected override string ElementName => ResolvedName ?? Name;
 
         public override int GetHashCode()
         {
@@ -79,7 +81,7 @@ namespace Facepunch.Parse
 
         public override string ToString()
         {
-            return $"<{Name}>";
+            return $"<{ElementName}>";
         }
     }
 }
