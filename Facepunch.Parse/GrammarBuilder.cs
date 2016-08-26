@@ -23,33 +23,43 @@ namespace Facepunch.Parse
             : base( context.Errors.First(), context.ErrorMessage ) { }
     }
 
-    public sealed class NamedParserCollection
+    public sealed class NamedParserCollection : INamedParserResolver
     {
         private readonly Dictionary<string, NamedParser> _namedParsers = new Dictionary<string, NamedParser>();
 
+        private readonly Stack<string> _namespace = new Stack<string>();
+
+        public void PushNamespace( string @namespace )
+        {
+            if ( _namespace.Count > 0 ) @namespace = $"{_namespace.Peek()}.{@namespace}";
+            _namespace.Push( @namespace );
+        }
+
+        public void PopNamespace()
+        {
+            _namespace.Pop();
+        }
+
         public void Add( string name, Parser definition )
         {
-            var parser = Get( name );
-            if ( parser.IsResolved )
+            if ( _namespace.Count > 0 ) name = $"{_namespace.Peek()}.{name}";
+
+            NamedParser parser;
+            if ( _namedParsers.TryGetValue( name, out parser ) )
             {
                 parser.Resolve( parser.ResolvedParser | definition );
             }
             else
             {
+                parser = new NamedParser( name );
+                _namedParsers.Add( name, parser );
                 parser.Resolve( definition );
             }
         }
 
         public NamedParser Get( string name )
         {
-            NamedParser parser;
-            if ( !_namedParsers.TryGetValue( name, out parser ) )
-            {
-                parser = new NamedParser( name );
-                _namedParsers.Add( name, parser );
-            }
-
-            return parser;
+            return new NamedParser( name, _namespace.Count == 0 ? null : _namespace.Peek(), this );
         }
 
         public NamedParser this[ string name ] => _namedParsers[name];
@@ -57,6 +67,32 @@ namespace Facepunch.Parse
         public override string ToString()
         {
             return string.Join( Environment.NewLine, _namedParsers.Select( x => $"{x.Key} = {x.Value.ResolvedParser};" ) );
+        }
+
+        private Parser GetExisting( string fullName )
+        {
+            NamedParser parser;
+            return _namedParsers.TryGetValue( fullName, out parser ) ? parser.ResolvedParser : null;
+        }
+
+        public Parser Resolve( NamedParser named )
+        {
+            if ( named.Namespace == null )
+            {
+                return GetExisting( named.Name );
+            }
+
+            var splitIndex = named.Namespace.Length;
+            while (true)
+            {
+                var existing = GetExisting( splitIndex <= 0 ? named.Name : $"{named.Namespace.Substring( 0, splitIndex )}.{named.Name}" );
+                if ( existing != null ) return existing;
+                if ( splitIndex <= 0 ) break;
+
+                splitIndex = named.Namespace.LastIndexOf( ".", splitIndex - 1 );
+            }
+
+            return null;
         }
     }
 
@@ -94,7 +130,17 @@ namespace Facepunch.Parse
         private static void ReadDefinition( ParseResult definition, NamedParserCollection rules )
         {
             var name = definition[0].Value;
+
+            rules.PushNamespace( name );
+
+            if ( definition.InnerCount > 2 )
+            {
+                ReadStatementBlock( definition[2], rules );
+            }
+
             var parser = ReadBranch( definition[1], rules );
+
+            rules.PopNamespace();
 
             rules.Add( name, parser );
         }
@@ -206,11 +252,21 @@ namespace Facepunch.Parse
 
         private static void ReadIgnoreBlock( ParseResult ignoreBlock, NamedParserCollection rules )
         {
-            var ignore = ReadBranch( ignoreBlock[0], rules );
-
-            using ( Parse.Parser.AllowWhitespace( ignore ) )
+            if ( ignoreBlock[0].InnerCount == 1 )
             {
-                ReadStatementBlock( ignoreBlock[1], rules );
+                var ignore = ReadBranch( ignoreBlock[0][0], rules );
+
+                using ( Parse.Parser.AllowWhitespace( ignore ) )
+                {
+                    ReadStatementBlock( ignoreBlock[1], rules );
+                }
+            }
+            else
+            {
+                using ( Parse.Parser.ForbidWhitespace() )
+                {
+                    ReadStatementBlock( ignoreBlock[1], rules );
+                }
             }
         }
     }

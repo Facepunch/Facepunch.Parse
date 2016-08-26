@@ -1,0 +1,83 @@
+Whitespace = /\s+/;
+
+Comment = SingleLine | MultiLine
+{
+    SingleLine = /\/\/[^\n]*(\n|$)/;
+    MultiLine = /\/\*([^\*]|\*[^/])*\*\//;
+}
+
+ignore Whitespace | Comment
+{
+    Language = "" | Token.Definition Language
+    {
+        Identifier = /[a-z_][a-z0-9_]*/i
+        {
+            Qualified = Identifier ("." Qualified | "");
+        }
+
+        Token.Definition = "token" Header "{" Body "}"
+        {
+            Header = Identifier.Qualified (":" Identifier.Qualified | "");
+            Body = Statement (Body | "");
+            Statement = Value.Definition | Match.Definition;
+        }
+
+        Value.Definition = "val" Identifier ":" Identifier.Qualified ";";
+        Match.Definition = "match" (Inherited | Full)
+        {
+            Inherited = Identifier.Qualified ";";
+            Full = Pattern "{" CodeBlock "}";
+        }
+
+        Pattern = Branch
+        {
+            Branch = Concat ("|" Branch | "");
+            Concat = Term (Concat | "");
+            Term = String | Regex | NonTerminal | "(" Branch ")";
+            NonTerminal = Named | Unnamed
+            {
+                Named = "(" Identifier ":" Identifier.Qualified ")";
+                Unnamed = Identifier.Qualified;
+            }
+
+            noignore
+            {
+                String = '"' Value '"'
+                {
+                    Value = /(\\[\\"rnt]|[^\\"])*/;
+                }
+
+                Regex = "/" Value "/" Options
+                {
+                    Value = /(\\.|\[[^\]]+\]|[^\\[/])+/;
+                    Options = "" | (Option Options);
+                    Option = "i";
+                }
+            }
+        }
+
+        CodeBlock = Statement (CodeBlock | "")
+        {
+            Statement = (Expression | Assignment) ";";
+            Invocation = "(" (Parameters | "") ")"
+            {
+                Parameters = Parameter ("," Parameters | "");
+                Parameter = Expression;
+            }
+
+            Assignment = Expression "=" Expression;
+
+            Expression = LogicalOr
+            {
+                LogicalOr = LogicalAnd ("||" LogicalOr | "");
+                LogicalAnd = Term ("&&" LogicalAnd | "");
+                Term = Value | "!" Term;
+                Accessor = (MemberAccess | Invocation) (Accessor | "");
+                MemberAccess = "." Identifier;
+                Value = Root (Accessor | "");
+                Root = Literal | Identifier | "(" Expression ")";
+                Literal = "true" | "false";
+            }
+        }
+    }
+}

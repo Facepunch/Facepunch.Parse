@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Facepunch.Parse
 {
-    public abstract class Parser
+    public abstract class Parser : IEquatable<Parser>
     {
         [ThreadStatic]
         private static Stack<Parser> _sWhitespaceParserStack;
@@ -161,6 +161,21 @@ namespace Facepunch.Parse
             }
 
             return elem;
+        }
+
+        public override int GetHashCode()
+        {
+            return ElementName.GetHashCode();
+        }
+
+        public override bool Equals( object obj )
+        {
+            return Equals( obj as Parser );
+        }
+
+        public virtual bool Equals( Parser other )
+        {
+            return ReferenceEquals( this, other );
         }
     }
 }

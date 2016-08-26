@@ -11,6 +11,7 @@ namespace Facepunch.Parse
         public NamedParser StatementBlock;
         public NamedParser Statement;
         public NamedParser IgnoreBlock;
+        public NamedParser IgnoreBlockHeader;
         public NamedParser Definition;
         public NamedParser Branch;
         public NamedParser Concat;
@@ -31,7 +32,7 @@ namespace Facepunch.Parse
             this[SingleLineComment] = new Regex( @"//[^\n]*(\n|$)" );
             this[MultiLineComment] = new Regex( @"/\*([^*]|\*[^/])*\*/" );
 
-            this[NonTerminal] = new Regex( @"[a-z0-9_]+", System.Text.RegularExpressions.RegexOptions.IgnoreCase );
+            this[NonTerminal] = new Regex( @"[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*", System.Text.RegularExpressions.RegexOptions.IgnoreCase );
             this[String] = "\"" + StringValueDouble + "\"" | "'" + StringValueSingle + "'" ;
             this[StringValueSingle] = new Regex( @"(\\[\\rnt']|[^\\'])*" );
             this[StringValueDouble] = new Regex( @"(\\[\\""rnt]|[^\\""])*" );
@@ -44,8 +45,9 @@ namespace Facepunch.Parse
             {
                 this[StatementBlock] = Statement + (StatementBlock | "");
                 this[Statement] = Definition | IgnoreBlock;
-                this[IgnoreBlock] = "ignore" + Branch + "{" + StatementBlock + "}";
-                this[Definition] = NonTerminal + "=" + Branch + ";";
+                this[IgnoreBlock] = IgnoreBlockHeader + "{" + StatementBlock + "}";
+                this[IgnoreBlockHeader] = "ignore" + Branch | "noignore";
+                this[Definition] = NonTerminal + "=" + Branch + (";" | "{" + StatementBlock + "}");
                 this[Branch] = Concat + ("|" + Branch | "");
                 this[Concat] = Term + (Concat | "");
                 this[Term] = String | Regex | NonTerminal | "(" + Branch + ")";

@@ -54,6 +54,12 @@
   <ItemGroup>
     <Compile Include="GrammarBuilderTest.cs" />
     <Compile Include="GrammarParserTest.cs" />
+    <Compile Include="MetaLanguageTest.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="TestHelper.cs" />
     <Compile Include="WhitespaceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -63,6 +69,18 @@
       <Project>{ab7e84ab-13e3-45bb-a743-a7fd27434fd0}</Project>
       <Name>Facepunch.Parse</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ExampleLanguage.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ExampleInput.txt" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

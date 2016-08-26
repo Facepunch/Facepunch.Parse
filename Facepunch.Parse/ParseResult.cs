@@ -208,7 +208,7 @@ namespace Facepunch.Parse
         private bool ShouldFlattenInner( ParseResult result )
         {
             if ( result.Parser.FlattenHierarchy ) return true;
-            if ( result.Parser == Parser ) return true;
+            if ( result.Parser.Equals( Parser ) ) return true;
             return false;
         }
 
@@ -225,11 +225,6 @@ namespace Facepunch.Parse
                 {
                     _inner.Add( result );
                     result._parent = this;
-
-                    if ( result.Parser is RegexParser && Parser is NamedParser )
-                    {
-                        result._errorMessage = ((NamedParser) Parser).Name;
-                    }
                 }
 
                 return;

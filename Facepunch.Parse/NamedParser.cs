@@ -25,8 +25,10 @@ namespace Facepunch.Parse
         }
 
         private Parser _resolvedParser;
+        private readonly string _nameEnd;
 
         public string Name { get; }
+        public string Namespace { get; }
         public INamedParserResolver Resolver { get; }
 
         public bool IsResolved => _resolvedParser != null;
@@ -42,14 +44,17 @@ namespace Facepunch.Parse
 
         protected NamedParser()
         {
-            Name = GetType().Name;
+            _nameEnd = Name = GetType().Name;
             Resolver = null;
         }
 
-        public NamedParser( string name, INamedParserResolver resolver = null )
+        public NamedParser( string name, string @namespace = null, INamedParserResolver resolver = null )
         {
             Name = name;
+            Namespace = @namespace;
             Resolver = resolver;
+
+            _nameEnd = name.Substring( name.LastIndexOf( "." ) + 1 );
         }
 
         protected override bool OnParse( ParseResult result )
@@ -60,6 +65,17 @@ namespace Facepunch.Parse
         }
 
         protected override string ElementName => Name;
+
+        public override int GetHashCode()
+        {
+            return _nameEnd.GetHashCode();
+        }
+
+        public override bool Equals( Parser other )
+        {
+            var named = other as NamedParser;
+            return named != null && named._nameEnd == _nameEnd && named.ResolvedParser.Equals( ResolvedParser );
+        }
 
         public override string ToString()
         {

@@ -1,0 +1,28 @@
+token ExprBase
+{
+    val ValueType : Type;
+    val IsConst : Boolean;
+}
+
+token Expression : ExprBase
+{
+    match "(" (inner:Expression) ")"
+    {
+        ValueType = inner.ValueType;
+        IsConst = inner.IsConst;
+    }
+    
+    match BinExpr.Add;
+}
+
+token BinExpr.Add : Expression
+{
+    match (lhs:Expression) "+" (rhs:Expression)
+    {
+        assert(lhs.ValueType.IsNumeric);
+        assert(rhs.ValueType.IsNumeric);
+    
+        ValueType = lhs.ValueType;
+        IsConst = lhs.IsConst && rhs.IsConst;
+    }
+}
