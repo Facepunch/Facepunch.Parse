@@ -103,7 +103,7 @@ namespace Facepunch.Parse
             if ( _whitespaceParser == null ) return;
 
             ParseResult whitespace;
-            while ( (whitespace = result.Peek( _whitespaceParser )).Success )
+            while ( (whitespace = result.Peek( _whitespaceParser )).Success && whitespace.Length > 0 )
             {
                 result.Skip( whitespace );
             }
