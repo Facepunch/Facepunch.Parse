@@ -10,7 +10,7 @@ namespace Facepunch.Parse.Test
             return GrammarBuilder.FromString( @"
                 Whitespace = /\s+/;
                 Word = /[a-z]+/i;
-                Period = ""."" | ""?"" | ""!"";
+                Period = '.' | '?' | '!';
                 EndOfInput = /$/;
 
                 ignore Whitespace

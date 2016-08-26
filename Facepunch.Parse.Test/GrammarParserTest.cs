@@ -47,7 +47,7 @@ namespace Facepunch.Parse.Test
             TestHelper.Test( new GrammarParser(), @"
                 Whitespace = /\s+/;
                 Word = /[a-z]+/i;
-                Period = ""."" | ""?"" | ""!"";
+                Period = '.' | '?' | '!';
                 EndOfInput = /$/;
 
                 ignore Whitespace

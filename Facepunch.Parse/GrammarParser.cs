@@ -17,7 +17,8 @@ namespace Facepunch.Parse
         public NamedParser Term;
         public NamedParser NonTerminal;
         public NamedParser String;
-        public NamedParser StringValue;
+        public NamedParser StringValueSingle;
+        public NamedParser StringValueDouble;
         public NamedParser Regex;
         public NamedParser RegexValue;
         public NamedParser RegexOptions;
@@ -31,8 +32,9 @@ namespace Facepunch.Parse
             this[MultiLineComment] = new Regex( @"/\*([^*]|\*[^/])*\*/" );
 
             this[NonTerminal] = new Regex( @"[a-z0-9_]+", System.Text.RegularExpressions.RegexOptions.IgnoreCase );
-            this[String] = "\"" + StringValue + "\"";
-            this[StringValue] = new Regex( @"(\\[\\""rnt]|[^\\""])*" );
+            this[String] = "\"" + StringValueDouble + "\"" | "'" + StringValueSingle + "'" ;
+            this[StringValueSingle] = new Regex( @"(\\[\\rnt']|[^\\'])*" );
+            this[StringValueDouble] = new Regex( @"(\\[\\""rnt]|[^\\""])*" );
             this[Regex] = "/" + RegexValue + "/" + RegexOptions;
             this[RegexValue] = new Regex( @"(\\.|\[[^\]]+\]|[^\\[/])+" );
             this[RegexOptions] = "" | (RegexOption + RegexOptions);
