@@ -56,7 +56,9 @@ namespace Facepunch.Parse
                 return true;
             }
 
-            foreach ( var parseResult in results )
+            var max = results.Max( x => x.MaxErrorIndex );
+
+            foreach ( var parseResult in results.Where( x => x.MaxErrorIndex == max ) )
             {
                 result.Error( parseResult );
             }

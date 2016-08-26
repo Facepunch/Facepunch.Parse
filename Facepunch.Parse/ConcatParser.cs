@@ -41,8 +41,7 @@ namespace Facepunch.Parse
             
             foreach ( var parser in _inner )
             {
-                ParseResult inner;
-                if ( !result.Read( parser, out inner ) ) return false;
+                if ( !result.Read( parser ) ) return false;
             }
 
             return true;

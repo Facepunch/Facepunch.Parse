@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -61,12 +62,30 @@ namespace Facepunch.Parse
         public string ErrorMessage => GetErrorMessage();
         public ParseError ErrorType { get; private set; }
 
+        public string Expected
+        {
+            get
+            {
+                if ( ErrorType != ParseError.ExpectedToken ) throw new InvalidOperationException();
+                if ( Parser is NamedParser && InnerCount == 0 )
+                {
+                    return ((NamedParser) Parser).Name;
+                }
+
+                return _errorMessage;
+            }
+        }
+
         public IEnumerable<ParseResult> Errors => _errorResults ?? (_errorResults = GetErrors());
 
         public int InnerCount => _inner.Count;
         public IEnumerable<ParseResult> Inner => _inner;
 
         public ParseResult this[ int index ] => _inner[index];
+
+        public int MaxErrorIndex => ErrorType == ParseError.SubParser && _inner.Count > 0
+            ? _inner.Max( x => x.MaxErrorIndex )
+            : ErrorType == ParseError.None ? -1 : Index;
 
         private void GetLineCol( int index, out int line, out int col )
         {
@@ -119,20 +138,29 @@ namespace Facepunch.Parse
 
         private List<ParseResult> GetErrors( List<ParseResult> dst = null )
         {
+            if ( dst == null ) dst = new List<ParseResult>();
+
             if ( _errorResults != null )
             {
-                if ( dst != null ) _errorResults.AddRange( _errorResults );
-
-                return _errorResults;
+                if ( _errorResults.Count > 0 )
+                {
+                    dst.RemoveAll( x => x.Index < _errorResults[0].Index );
+                    dst.AddRange( _errorResults );
+                }
+                return dst;
             }
-
-            if ( dst == null ) dst = new List<ParseResult>();
 
             if ( ErrorType == ParseError.None ) return dst;
 
             if ( ErrorType != ParseError.SubParser )
             {
-                dst.Add( this );
+                if ( dst.Count == 0 ) dst.Add( this );
+                else if ( dst[0].Index <= Index )
+                {
+                    dst.Add( this );
+                    dst.RemoveAll( x => x.Index < Index );
+                }
+                return dst;
             }
 
             foreach ( var inner in _inner )
@@ -153,15 +181,13 @@ namespace Facepunch.Parse
                 return _innerMessage = string.Empty;
             }
 
-            var max = errors.Max(x => x.Index);
-            errors.RemoveAll( x => x.Index != max );
-
             var nonExpect = errors.FirstOrDefault(x => x.ErrorType != ParseError.ExpectedToken);
             if ( nonExpect != null ) return _innerMessage = nonExpect.ErrorMessage;
 
             var builder = new StringBuilder();
 
-            var distinct = errors.Select(x => x._errorMessage).Distinct().ToArray();
+            var distinct = errors.Select(x => x.Expected).Distinct().ToArray();
+
             for ( var i = 0; i < distinct.Length; ++i )
             {
                 if ( i > 0 )
@@ -188,23 +214,24 @@ namespace Facepunch.Parse
 
         private void AddInner( ParseResult result )
         {
+            var len = result.ReadPos - Index;
+            if ( Length < len ) Length = len;
+
+            Success &= result.Success;
+
             if ( !ShouldFlattenInner( result ) )
             {
                 if ( !result.Parser.OmitFromResult || !result.Success )
                 {
                     _inner.Add( result );
                     result._parent = this;
+
+                    if ( result.Parser is RegexParser && Parser is NamedParser )
+                    {
+                        result._errorMessage = ((NamedParser) Parser).Name;
+                    }
                 }
 
-                Length = result.ReadPos - Index;
-                Success &= result.Success;
-
-                if ( result.ErrorType == ParseError.ExpectedToken && result.Parser is RegexParser && Parser is NamedParser )
-                {
-                    ErrorType = ParseError.ExpectedToken;
-                    var named = (NamedParser) Parser;
-                    _errorMessage = named.Name;
-                }
                 return;
             }
 
@@ -225,7 +252,10 @@ namespace Facepunch.Parse
         public bool Error( ParseResult inner )
         {
             Success = false;
-            ErrorType = ParseError.SubParser;
+            if ( ErrorType == ParseError.None )
+            {
+                ErrorType = ParseError.SubParser;
+            }
             AddInner( inner );
             return false;
         }
@@ -262,14 +292,6 @@ namespace Facepunch.Parse
         public bool Read( Parser parser )
         {
             var result = Peek(parser);
-            if ( result.Success ) Apply( result );
-            else Error( result );
-            return result.Success;
-        }
-
-        public bool Read( Parser parser, out ParseResult result )
-        {
-            result = Peek( parser );
             if ( result.Success ) Apply( result );
             else Error( result );
             return result.Success;

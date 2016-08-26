@@ -44,7 +44,7 @@ namespace Facepunch.Parse
                 this[Statement] = Definition | IgnoreBlock;
                 this[IgnoreBlock] = "ignore" + Branch + "{" + StatementBlock + "}";
                 this[Definition] = NonTerminal + "=" + Branch + ";";
-                this[Branch] = Concat + (("|" + Branch) | "");
+                this[Branch] = Concat + ("|" + Branch | "");
                 this[Concat] = Term + (Concat | "");
                 this[Term] = String | Regex | NonTerminal | "(" + Branch + ")";
             }

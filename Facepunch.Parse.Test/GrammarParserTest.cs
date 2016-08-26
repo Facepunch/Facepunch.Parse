@@ -30,20 +30,30 @@ namespace Facepunch.Parse.Test
         }
 
         [TestMethod]
+        public void GrammarParseParetheses1()
+        {
+            TestHelper.Test( new GrammarParser(), "Document = (A);", true );
+        }
+
+        [TestMethod]
+        public void GrammarParseParetheses2()
+        {
+            TestHelper.Test( new GrammarParser(), "Document = (A | B);", true );
+        }
+
+        [TestMethod]
         public void GrammarParserComplex1()
         {
             TestHelper.Test( new GrammarParser(), @"
                 Whitespace = /\s+/;
                 Word = /[a-z]+/i;
                 Period = ""."" | ""?"" | ""!"";
+                EndOfInput = /$/;
 
                 ignore Whitespace
                 {
-                    Document = Sentence;
-                    Document = Sentence | Document;
-
-                    Sentence = Word Period;
-                    Sentence = Word Sentence;
+                    Document = Sentence (Document | EndOfInput);
+                    Sentence = Word (Sentence | Period);
                 }
             ", true );
         }
