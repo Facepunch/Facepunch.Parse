@@ -6,7 +6,7 @@ Context-free grammar parsing tool
 ## Example
 ### Parser
 
-```
+```csharp
 var grammar = GrammarBuilder.FromString( @"
     Whitespace = /\s+/;
     Word = /[a-z]+/i;
