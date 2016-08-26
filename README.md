@@ -6,81 +6,65 @@ Context-free grammar parsing tool
 ## Example
 ### Parser
 
-```csharp
-var whitespace = (Parser) new Regex(@"\s+|//[^\n]*\n|/\*(\*[^/]|[^\*])*\*/");
-var root = new NamedParser("Root");
-var decl = new NamedParser("Declaration");
-var usng = new NamedParser("Using");
-var ident = new NamedParser("Identifier");
-var qualident = new NamedParser("QualifiedIdentifier");
+```var grammar = GrammarBuilder.FromString( @"
+    Whitespace = /\s+/;
+    Word = /[a-z]+/i;
+    Period = ""."" | ""?"" | ""!"";
+    EndOfInput = /$/;
 
-using (ConcatParser.ForbidWhitespace())
-{
-    ident.Resolve(new Regex("[a-z_][a-z0-9_]*", RegexOptions.Compiled | RegexOptions.IgnoreCase));
-
-    using (ConcatParser.AllowWhitespace(whitespace))
+    ignore Whitespace
     {
-        qualident.Resolve(ident | (ident + "." + qualident));
-
-        root.Resolve(decl | (decl + root));
-        decl.Resolve(usng);
-        usng.Resolve("using" + qualident + ";");
+        Document = Sentence (Document | EndOfInput);
+        Sentence = Word (Sentence | Period);
     }
-}
+" );
 
-var result = root.Parse(File.ReadAllText(args[0]));
+var result = grammar["Document"].Parse(File.ReadAllText(args[0]));
+
 Console.WriteLine(result.ToXElement());
 ```
 
 ### Input
 
 ```
-using System;
-//using System.Reflection;
-using System.Reflection.Emit;
-
-/*
-
-using Foo.Bar;
-
-*/
-
-using System.Collections.Generic;
-
-using something invalid!
-
+Hello world! How are you? Testing-testing testing testing.
 ```
 
 ### Output
 
+```
+Error: Expected Word, '.', '?', or '!' at line 1, column 34
+```
+
 ```xml
-<Root>
-  <Declaration>
-    <QualifiedIdentifier>
-      <Identifier>System</Identifier>
-    </QualifiedIdentifier>
-  </Declaration>
-  <Declaration>
-    <QualifiedIdentifier>
-      <Identifier>System</Identifier>
-      <Identifier>Reflection</Identifier>
-      <Identifier>Emit</Identifier>
-    </QualifiedIdentifier>
-  </Declaration>
-  <Declaration>
-    <QualifiedIdentifier>
-      <Identifier>System</Identifier>
-      <Identifier>Collections</Identifier>
-      <Identifier>Generic</Identifier>
-    </QualifiedIdentifier>
-  </Declaration>
-  <Declaration>
-    <QualifiedIdentifier>
-      <Identifier>something</Identifier>
-      <Token>
-        <ParseError>Expected '.' at (13, 17)</ParseError>
+<Document index="0" length="33">
+  <Sentence index="0" length="13">
+    <Word index="0" length="5">Hello</Word>
+    <Word index="6" length="5">world</Word>
+    <Period index="11" length="1">!</Period>
+  </Sentence>
+  <Sentence index="13" length="13">
+    <Word index="13" length="3">How</Word>
+    <Word index="17" length="3">are</Word>
+    <Word index="21" length="3">you</Word>
+    <Period index="24" length="1">?</Period>
+  </Sentence>
+  <Sentence index="26" length="7">
+    <Word index="26" length="7">Testing</Word>
+    <Word index="33" length="0">
+      <ParseError>Expected Word</ParseError>
+    </Word>
+    <Period index="33" length="0">
+      <Token index="33" length="0">
+        <ParseError>Expected '.'</ParseError>
       </Token>
-    </QualifiedIdentifier>
-  </Declaration>
-</Root>
+      <Token index="33" length="0">
+        <ParseError>Expected '?'</ParseError>
+      </Token>
+      <Token index="33" length="0">
+        <ParseError>Expected '!'</ParseError>
+      </Token>
+    </Period>
+  </Sentence>
+</Document>
 ```
