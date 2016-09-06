@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Diagnostics;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Facepunch.Parse.Test
 {
@@ -36,6 +37,23 @@ namespace Facepunch.Parse.Test
                 ignore Whitespace
                 {
                     Document = Value (',' Document | EndOfInput);
+                }
+            " );
+        }
+
+        private NamedParserCollection GetGrammar3()
+        {
+            return GrammarBuilder.FromString( @"
+                Whitespace = /\s+/;
+                EndOfInput = /$/;
+
+                Identifier = /[a-z]+/i;
+
+                ignore Whitespace
+                {
+                    Document = Statement (',' Document | EndOfInput);
+                    Statement = Identifier '(' ( ParamList | '' ) ')';
+                    ParamList = Statement (',' ParamList | '');
                 }
             " );
         }
@@ -80,6 +98,12 @@ namespace Facepunch.Parse.Test
         public void GrammarBuilder7()
         {
             TestHelper.Test( GetGrammar2()["Document"], "5, 12.324, -3, -18.61, 0, 8.0", true );
+        }
+
+        [TestMethod]
+        public void GrammarBuilder8()
+        {
+            var result = TestHelper.Test( GetGrammar3()["Document"], "Hello( World() ), How( Are( You(), Today() ), Foo() )", true );
         }
     }
 }

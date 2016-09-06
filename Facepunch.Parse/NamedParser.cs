@@ -66,7 +66,7 @@ namespace Facepunch.Parse
             return ResolvedParser.Parse( result );
         }
 
-        protected override string ElementName => ResolvedName ?? Name;
+        public override string ElementName => ResolvedName ?? Name;
 
         public override int GetHashCode()
         {

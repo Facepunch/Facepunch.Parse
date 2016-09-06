@@ -118,7 +118,7 @@ namespace Facepunch.Parse
         }
 
         private string _elementName;
-        protected virtual string ElementName
+        public virtual string ElementName
         {
             get
             {
@@ -154,7 +154,7 @@ namespace Facepunch.Parse
             }
             else
             {
-                foreach ( var inner in result.Inner )
+                foreach ( var inner in result )
                 {
                     elem.Add( inner.ToXElement() );
                 }

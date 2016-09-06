@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,7 +17,7 @@ namespace Facepunch.Parse
         NullParser
     }
 
-    public sealed class ParseResult
+    public sealed class ParseResult : IEnumerable<ParseResult>
     {
         private readonly string _source;
         private readonly List<ParseResult> _inner = new List<ParseResult>();
@@ -82,9 +82,9 @@ namespace Facepunch.Parse
         public IEnumerable<ParseResult> Errors => _errorResults ?? (_errorResults = GetErrors());
 
         public int InnerCount => _inner.Count;
-        public IEnumerable<ParseResult> Inner => _inner;
 
         public ParseResult this[ int index ] => _inner[index];
+        public ParseResult this[ string elementName ] => _inner.FirstOrDefault( x => x.Parser.ElementName == elementName );
 
         public int MaxErrorIndex => ErrorType == ParseError.SubParser && _inner.Count > 0
             ? _inner.Max( x => x.MaxErrorIndex )
@@ -237,7 +237,7 @@ namespace Facepunch.Parse
                 return;
             }
 
-            foreach ( var inner in result.Inner )
+            foreach ( var inner in result )
             {
                 AddInner( inner );
             }
@@ -335,9 +335,19 @@ namespace Facepunch.Parse
             return Parser.ToXElement( this );
         }
 
+        public IEnumerator<ParseResult> GetEnumerator()
+        {
+            return _inner.GetEnumerator();
+        }
+
         public override string ToString()
         {
             return Success ? _source.Substring( TrimmedIndex, TrimmedLength ) : ErrorMessage;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

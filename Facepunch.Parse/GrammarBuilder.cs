@@ -118,7 +118,7 @@ namespace Facepunch.Parse
 
         private static void ReadStatementBlock( ParseResult statementBlock, NamedParserCollection rules )
         {
-            foreach ( var statement in statementBlock.Inner )
+            foreach ( var statement in statementBlock )
             {
                 var value = statement[0];
                 if ( value.Parser == Parser.Definition )
@@ -154,14 +154,14 @@ namespace Facepunch.Parse
         {
             return branch.InnerCount == 1
                 ? ReadConcat( branch[0], rules )
-                : new BranchParser( branch.Inner.Select( x => ReadConcat( x, rules ) ) );
+                : new BranchParser( branch.Select( x => ReadConcat( x, rules ) ) );
         }
 
         private static Parser ReadConcat( ParseResult concat, NamedParserCollection rules )
         {
             return concat.InnerCount == 1
                 ? ReadTerm( concat[0], rules )
-                : new ConcatParser( concat.Inner.Select( x => ReadTerm( x, rules ) ) );
+                : new ConcatParser( concat.Select( x => ReadTerm( x, rules ) ) );
         }
 
         private static Parser ReadTerm( ParseResult term, NamedParserCollection rules )

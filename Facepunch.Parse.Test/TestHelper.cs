@@ -6,7 +6,7 @@ namespace Facepunch.Parse.Test
 {
     public static class TestHelper
     {
-        public static void Test( Parser parser, string input, bool shouldSucceed )
+        public static ParseResult Test( Parser parser, string input, bool shouldSucceed )
         {
             var result = parser.Parse( input );
 
@@ -22,6 +22,8 @@ namespace Facepunch.Parse.Test
             }
 
             Assert.AreEqual( shouldSucceed, result.Success );
+
+            return result;
         }
     }
 }
