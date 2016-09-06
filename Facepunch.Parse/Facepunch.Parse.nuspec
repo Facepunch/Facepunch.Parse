@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package>
+    <metadata>
+        <id>Facepunch.Parse</id>
+        <version>0.1.0</version>
+        <title>Facepunch.Parse</title>
+        <authors>Facepunch Studios</authors>
+        <owners>Facepunch Studios</owners>
+        <projectUrl>https://github.com/Facepunch/Facepunch.Parse</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>Context-free grammar parsing tool.</description>
+        <copyright>Copyright Facepunch Studios 2016</copyright>
+        <tags>parser</tags>
+    </metadata>
+    <files>
+        <file src="bin\Release\Facepunch.Parse.dll" target="lib\net452\Facepunch.Parse.dll" />
+        <file src="bin\Release\Facepunch.Parse.xml" target="lib\net452\Facepunch.Parse.xml" />
+    </files>
+</package>
