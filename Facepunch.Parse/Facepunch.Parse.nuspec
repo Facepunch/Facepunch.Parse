@@ -2,7 +2,7 @@
 <package>
     <metadata>
         <id>Facepunch.Parse</id>
-        <version>1.0.0</version>
+        <version>$version$</version>
         <title>Facepunch.Parse</title>
         <authors>Facepunch Studios</authors>
         <owners>Facepunch Studios</owners>
@@ -12,8 +12,5 @@
         <copyright>Copyright Facepunch Studios 2016</copyright>
         <tags>parser</tags>
     </metadata>
-    <files>
-        <file src="bin\Release\Facepunch.Parse.dll" target="lib\net45\Facepunch.Parse.dll" />
-        <file src="bin\Release\Facepunch.Parse.xml" target="lib\net45\Facepunch.Parse.xml" />
-    </files>
+    <files></files>
 </package>
