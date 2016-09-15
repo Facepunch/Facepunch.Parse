@@ -55,9 +55,6 @@
     <Compile Include="TerminalParsers.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Grammars\BackusNaur.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Facepunch.Parse.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
