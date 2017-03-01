@@ -52,6 +52,7 @@
     <Compile Include="Parser.cs" />
     <Compile Include="ParseResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StrictParser.cs" />
     <Compile Include="TerminalParsers.cs" />
   </ItemGroup>
   <ItemGroup>

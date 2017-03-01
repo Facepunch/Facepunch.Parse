@@ -10,11 +10,14 @@ namespace Facepunch.Parse
         public NamedParser MultiLineComment;
         public NamedParser StatementBlock;
         public NamedParser Statement;
-        public NamedParser IgnoreBlock;
+        public NamedParser SpecialBlock;
+        public NamedParser SpecialBlockHeader;
         public NamedParser IgnoreBlockHeader;
         public NamedParser Definition;
         public NamedParser Branch;
         public NamedParser Concat;
+        public NamedParser Modifier;
+        public NamedParser ModifierPrefix;
         public NamedParser Term;
         public NamedParser NonTerminal;
         public NamedParser String;
@@ -44,12 +47,14 @@ namespace Facepunch.Parse
             using ( AllowWhitespace( Ignore ) )
             {
                 this[StatementBlock] = Statement + (StatementBlock | "");
-                this[Statement] = Definition | IgnoreBlock;
-                this[IgnoreBlock] = IgnoreBlockHeader + "{" + StatementBlock + "}";
-                this[IgnoreBlockHeader] = "ignore" + Branch | "noignore";
+                this[Statement] = Definition | SpecialBlock;
+                this[SpecialBlock] = SpecialBlockHeader + "{" + StatementBlock + "}";
+                this[SpecialBlockHeader] = "ignore" + Branch | "noignore" | "collapse";
                 this[Definition] = NonTerminal + "=" + Branch + (";" | "{" + StatementBlock + "}");
                 this[Branch] = Concat + ("|" + Branch | "");
-                this[Concat] = Term + (Concat | "");
+                this[Concat] = Modifier + (Concat | "");
+                this[ModifierPrefix] = "$";
+                this[Modifier] = (ModifierPrefix + Term) | Term;
                 this[Term] = String | Regex | NonTerminal | "(" + Branch + ")";
             }
 

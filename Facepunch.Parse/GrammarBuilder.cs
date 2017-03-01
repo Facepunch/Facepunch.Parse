@@ -125,9 +125,9 @@ namespace Facepunch.Parse
                 {
                     ReadDefinition( value, rules );
                 }
-                else if ( value.Parser == Parser.IgnoreBlock )
+                else if ( value.Parser == Parser.SpecialBlock )
                 {
-                    ReadIgnoreBlock( value, rules );
+                    ReadSpecialBlock( value, rules );
                 }
             }
         }
@@ -160,8 +160,15 @@ namespace Facepunch.Parse
         private static Parser ReadConcat( ParseResult concat, NamedParserCollection rules )
         {
             return concat.InnerCount == 1
-                ? ReadTerm( concat[0], rules )
-                : new ConcatParser( concat.Select( x => ReadTerm( x, rules ) ) );
+                ? ReadModifier( concat[0], rules )
+                : new ConcatParser( concat.Select( x => ReadModifier( x, rules ) ) );
+        }
+
+        private static Parser ReadModifier( ParseResult modifier, NamedParserCollection rules )
+        {
+            return modifier.InnerCount == 1
+                ? ReadTerm( modifier[0], rules )
+                : new StrictParser( ReadTerm( modifier[1], rules ) );
         }
 
         private static Parser ReadTerm( ParseResult term, NamedParserCollection rules )
@@ -255,23 +262,33 @@ namespace Facepunch.Parse
             return rules.Get( name );
         }
 
-        private static void ReadIgnoreBlock( ParseResult ignoreBlock, NamedParserCollection rules )
+        private static void ReadSpecialBlock( ParseResult specialBlock, NamedParserCollection rules )
         {
-            if ( ignoreBlock[0].InnerCount == 1 )
+            if ( specialBlock[0].InnerCount == 1 )
             {
-                var ignore = ReadBranch( ignoreBlock[0][0], rules );
+                var ignore = ReadBranch( specialBlock[0][0], rules );
 
                 using ( Parse.Parser.AllowWhitespace( ignore ) )
                 {
-                    ReadStatementBlock( ignoreBlock[1], rules );
+                    ReadStatementBlock( specialBlock[1], rules );
                 }
             }
-            else
+            else switch ( specialBlock[0].Value.Trim() )
             {
-                using ( Parse.Parser.ForbidWhitespace() )
-                {
-                    ReadStatementBlock( ignoreBlock[1], rules );
-                }
+                case "noignore":
+                    using ( Parse.Parser.ForbidWhitespace() )
+                    {
+                        ReadStatementBlock( specialBlock[1], rules );
+                    }
+                    break;
+                case "collapse":
+                    using ( Parse.Parser.EnableCollapseSingletons() )
+                    {
+                        ReadStatementBlock( specialBlock[1], rules );
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException(specialBlock[0].Value);
             }
         }
     }
