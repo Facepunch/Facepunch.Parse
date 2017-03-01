@@ -25,12 +25,13 @@ namespace Facepunch.Parse
         private int _lineNumber;
         private int _columnNumber;
 
-        private ParseResult _parent;
         private string _errorMessage;
         private string _innerMessage;
         private List<ParseResult> _errorResults;
 
         public Parser Parser { get; }
+
+        public ParseResult Parent { get; private set; }
 
         public int Index { get; }
         public int TrimmedIndex { get; private set; }
@@ -116,7 +117,7 @@ namespace Facepunch.Parse
         internal ParseResult( ParseResult parent, Parser parser )
             : this( parent._source, parser )
         {
-            _parent = parent;
+            Parent = parent;
             TrimmedIndex = Index = parent.Index + parent.Length;
         }
 
@@ -128,7 +129,7 @@ namespace Facepunch.Parse
         public bool GetIsInfiniteRecursion()
         {
             var parent = this;
-            while ( (parent = parent._parent) != null )
+            while ( (parent = parent.Parent) != null )
             {
                 if ( IsIdentical( parent ) )
                 {
@@ -231,7 +232,7 @@ namespace Facepunch.Parse
                 if ( !result.Parser.OmitFromResult || !result.Success )
                 {
                     _inner.Add( result );
-                    result._parent = this;
+                    result.Parent = this;
                 }
 
                 return;
@@ -303,7 +304,7 @@ namespace Facepunch.Parse
 
         public void Skip( ParseResult inner )
         {
-            if ( inner._parent != this ) throw new ArgumentException();
+            if ( inner.Parent != this ) throw new ArgumentException();
             if ( inner.Index != ReadPos ) throw new ArgumentException();
 
             Length = inner.ReadPos - Index;
@@ -312,7 +313,7 @@ namespace Facepunch.Parse
 
         public void Apply( ParseResult inner )
         {
-            if ( inner._parent != this ) throw new ArgumentException();
+            if ( inner.Parent != this ) throw new ArgumentException();
             if ( inner.Index != ReadPos ) throw new ArgumentException();
 
             AddInner( inner );
