@@ -223,7 +223,7 @@ namespace Facepunch.Parse
             if ( Length < len )
             {
                 Length = len;
-                TrimmedLength = result.ReadPos - TrimmedIndex;
+                TrimmedLength = result.Index + result.TrimmedLength - TrimmedIndex;
             }
 
             Success &= result.Success;

@@ -49,7 +49,7 @@ namespace Facepunch.Parse
 
         public override string ToString()
         {
-            return string.Join( " ", Inner.Select( x => x is BranchParser ? "(" + x.ToString() + ")" : x.ToString() ) );
+            return string.Join( " ", Inner.Select( x => x is BranchParser ? "(" + x.ToString() + ")" : x.ToString() ).ToArray() );
         }
     }
 }

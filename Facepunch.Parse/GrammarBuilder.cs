@@ -66,7 +66,7 @@ namespace Facepunch.Parse
 
         public override string ToString()
         {
-            return string.Join( Environment.NewLine, _namedParsers.Select( x => $"{x.Key} = {x.Value.ResolvedParser};" ) );
+            return string.Join( Environment.NewLine, _namedParsers.Select( x => $"{x.Key} = {x.Value.ResolvedParser};" ).ToArray() );
         }
 
         private Parser GetExisting( string fullName )
@@ -273,7 +273,7 @@ namespace Facepunch.Parse
                     ReadStatementBlock( specialBlock[1], rules );
                 }
             }
-            else switch ( specialBlock[0].Value.Trim() )
+            else switch ( specialBlock[0].Value )
             {
                 case "noignore":
                     using ( Parse.Parser.ForbidWhitespace() )

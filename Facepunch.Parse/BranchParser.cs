@@ -67,7 +67,7 @@ namespace Facepunch.Parse
 
         public override string ToString()
         {
-            return string.Join( " | ", Inner.Select( x => x.ToString() ) );
+            return string.Join( " | ", Inner.Select( x => x.ToString() ).ToArray() );
         }
     }
 }
