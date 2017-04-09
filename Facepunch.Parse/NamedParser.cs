@@ -26,10 +26,13 @@ namespace Facepunch.Parse
 
         private Parser _resolvedParser;
         private readonly string _nameEnd;
+        private bool _collapseSingletons;
 
         public string Name { get; }
         public string Namespace { get; }
         public INamedParserResolver Resolver { get; }
+
+        public override bool CollapseSingletons => _collapseSingletons;
 
         public string ResolvedName { get; set; }
 
@@ -42,6 +45,7 @@ namespace Facepunch.Parse
         public void Resolve( Parser value )
         {
             _resolvedParser = value;
+            _collapseSingletons = CurrentCollapseState;
         }
 
         protected NamedParser()

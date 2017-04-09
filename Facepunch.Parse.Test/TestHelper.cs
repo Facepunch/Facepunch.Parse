@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,15 +11,15 @@ namespace Facepunch.Parse.Test
         {
             var result = parser.Parse( input );
 
-            Debug.WriteLine( $"# Input:\r\n{input}" );
-            Debug.WriteLine( $"# Output:\r\n{result.ToXElement()}" );
-            Debug.WriteLine( $"# Success: {result.Success}" );
+            Console.WriteLine( $"# Input:\r\n{input}" );
+            Console.WriteLine( $"# Output:\r\n{result.ToXElement()}" );
+            Console.WriteLine( $"# Success: {result.Success}" );
 
             if ( !result.Success )
             {
                 var error = result.Errors.First();
 
-                Debug.WriteLine( $"Error: {result.ErrorMessage} at line {error.LineNumber}, column {error.ColumNumber}" );
+                Console.WriteLine( $"Error: {result.ErrorMessage} at line {error.LineNumber}, column {error.ColumNumber}" );
             }
 
             Assert.AreEqual( shouldSucceed, result.Success );

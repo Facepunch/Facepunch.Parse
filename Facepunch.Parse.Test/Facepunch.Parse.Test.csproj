@@ -52,6 +52,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="CollapseTest.cs" />
     <Compile Include="GrammarBuilderTest.cs" />
     <Compile Include="GrammarParserTest.cs" />
     <Compile Include="MetaLanguageTest.cs" />

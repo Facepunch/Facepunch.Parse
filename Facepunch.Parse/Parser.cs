@@ -19,7 +19,7 @@ namespace Facepunch.Parse
         private static Parser CurrentWhitespaceParser => WhitespaceParserStack.Count == 0 ? null : WhitespaceParserStack.Peek();
         
         private static readonly CollapseStateDisposable _sCollapseStateDisposable = new CollapseStateDisposable();
-        private static bool CurrentCollapseState => CollapseStateStack.Count != 0 && CollapseStateStack.Peek();
+        protected static bool CurrentCollapseState => CollapseStateStack.Count != 0 && CollapseStateStack.Peek();
 
         public static Parser EndOfInput { get; } = new RegexParser( new Regex( "$", RegexOptions.Compiled ) );
 
@@ -117,7 +117,7 @@ namespace Facepunch.Parse
 
         private readonly Parser _whitespaceParser = CurrentWhitespaceParser;
 
-        public bool CollapseSingletons { get; } = CurrentCollapseState;
+        public virtual bool CollapseSingletons { get; } = false;
         public virtual bool FlattenHierarchy { get; } = false;
         public virtual bool OmitFromResult { get; } = false;
 

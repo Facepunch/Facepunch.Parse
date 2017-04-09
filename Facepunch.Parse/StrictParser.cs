@@ -4,6 +4,8 @@
     {
         private readonly Parser _inner;
 
+        public override bool OmitFromResult => true;
+
         public StrictParser( Parser inner )
         {
             _inner = inner;
