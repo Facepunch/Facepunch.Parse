@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Facepunch.Parse.Test.Properties;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Facepunch.Parse.Test
@@ -6,62 +7,41 @@ namespace Facepunch.Parse.Test
     [TestClass]
     public class CollapseTest
     {
-        private Parser CreateParser()
+        private NamedParserCollection CreateGrammar()
         {
-            var root = new NamedParser( "Root" );
-            var a = new NamedParser( "A" );
-            var b = new NamedParser( "B" );
-            var c = new NamedParser( "C" );
-
-            using ( Parser.AllowWhitespace( " " ) )
-            {
-                root.Resolve( a );
-                using ( Parser.EnableCollapseSingletons() )
-                {
-                    a.Resolve( b + (("?" + a + ":" + a) | "") );
-                    b.Resolve( c + (("+" + b) | "") );
-                }
-            }
-
-            c.Resolve( new Regex( @"[0-9]+" ) );
-
-            return root;
+            return GrammarBuilder.FromString( Resources.ExpressionGrammar );
         }
 
         [TestMethod]
-        public void Collapse1()
+        public void CollapseBuilder1()
         {
-            TestHelper.Test( CreateParser(), "0", true );
+            Assert.IsTrue( CreateGrammar()["Expression"].CollapseIfSingleElement );
         }
 
         [TestMethod]
-        public void Collapse2()
+        public void CollapseBuilder2()
         {
-            TestHelper.Test( CreateParser(), "0 + 1", true );
+            Assert.IsTrue(CreateGrammar()["Expression.Conditional"].CollapseIfSingleElement);
         }
 
         [TestMethod]
-        public void Collapse3()
+        public void CollapseBuilder3()
         {
-            TestHelper.Test( CreateParser(), "0 + 1 + 2", true );
+            Assert.IsTrue(CreateGrammar()["Expression.ConditionalOr"].CollapseIfSingleElement);
         }
 
         [TestMethod]
-        public void Collapse4()
+        public void CollapseParse1()
         {
-            TestHelper.Test( CreateParser(), "0 ++ 1", false );
+            var parser = CreateGrammar()["Expression"];
+            Assert.IsTrue( parser.ResolvedParser.CollapseIfSingleElement );
         }
 
         [TestMethod]
-        public void Collapse5()
+        public void CollapseParse2()
         {
-            TestHelper.Test( CreateParser(), "0 ? 1 + 3 : 2", true );
-        }
-
-        [TestMethod]
-        public void Collapse6()
-        {
-            TestHelper.Test( CreateParser(), "0 ? 1 ? 3 : 4 : 2", true );
+            var parser = CreateGrammar()["Expression"];
+            TestHelper.Test( parser, "a?b:c", true );
         }
     }
 }

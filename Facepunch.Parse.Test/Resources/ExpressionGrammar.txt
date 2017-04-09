@@ -1,0 +1,118 @@
+﻿Whitespace = /\s+/;
+Comment = SingleLine | MultiLine
+{
+    SingleLine = /\/\/[^\n]*(\n|$)/;
+    MultiLine = /\/\*([^\*]|\*[^/])*\*\//;
+}
+
+ignore Whitespace | Comment
+{
+    Ident = /[a-z_][a-z0-9_]*/i;
+
+    Constant = String | Integer | Float | Double
+    {
+        noignore
+        {
+            String = "\"" Value "\""
+            {
+                Value = Char Value | "";
+                Char = Unescaped | "\\" Escaped
+                {
+                    Unescaped = /[^"\n]/;
+                    Escaped = /["ntr\\0]/;
+                }
+            }
+
+            Integer = /-?[1-9][0-9]*|0/;
+            Float = /-?[1-9][0-9]*|0(\.[0-9]+)f/;
+            Double = /-?[1-9][0-9]*|0(\.[0-9]+d?|d)/;
+        }
+    }
+    
+    collapse
+    {
+        Expression = Conditional
+        {
+            Conditional = ConditionalOr (Operator.Conditional.IfThen Conditional Operator.Conditional.Else Conditional | "");
+            ConditionalOr   = ConditionalAnd  (Operator.ConditionalOr  ConditionalOr | "");
+            ConditionalAnd  = LogicalOr       (Operator.ConditionalAnd ConditionalAnd | "");
+            LogicalOr       = LogicalXor      (Operator.LogicalOr      LogicalOr | "");
+            LogicalXor      = LogicalAnd      (Operator.LogicalXor     LogicalXor | "");
+            LogicalAnd      = Equality        (Operator.LogicalAnd     LogicalAnd | "");
+            Equality        = Relational      (Operator.Equality       Equality | "");
+            Relational      = Shift           (Operator.Relational     Relational | "");
+            Shift           = Additive        (Operator.Shift          Shift | "");
+            Additive        = Multiplicative  (Operator.Additive       Additive | "");
+            Multiplicative  = Unary           (Operator.Multiplicative Multiplicative | "");
+            Unary           = Operator.Unary Unary | Primary;
+            Primary         = Term Accessor;
+            Term = "(" Expression ")" | Constant | Ident;
+
+            Accessor = (MemberAccess | MethodCall) Accessor | "";
+        }
+    }
+
+    Expression.Accessor.MemberAccess = "." Ident;
+    Expression.Accessor.MethodCall = "(" (ExpressionList | "") ")";
+    Expression.Accessor.ExpressionList = Expression ("," ExpressionList | "");
+
+    collapse
+    {
+        Operator = Unary | Multiplicative | Additive | Shift | Relational | Equality | LogicalAnd | LogicalXor | LogicalOr | ConditionalAnd | ConditionalOr | Conditional
+        {
+            Unary = Identity | Negate | Not | Inverse
+            {
+                Identity = "+";
+                Negate = "-";
+                Not = "!";
+                Inverse = "~";
+            }
+
+            Multiplicative = Multiply | Divide | Modulo
+            {
+                Multiply = "*";
+                Divide = "/";
+                Modulo = "%";
+            }
+
+            Additive = Add | Subtract
+            {
+                Add = "+";
+                Subtract = "-";
+            }
+
+            Shift = LeftShift | RightShift
+            {
+                LeftShift = "<<";
+                RightShift = ">>";
+            }
+
+            Relational = LessThan | GreaterThan | LessThanOrEqual | GreaterThanOrEqual
+            {
+                LessThan = "<";
+                GreaterThan = ">";
+                LessThanOrEqual = "<=";
+                GreaterThanOrEqual = ">=";
+            }
+
+            Equality = Equals | NotEquals
+            {
+                Equals = "==";
+                NotEquals = "!=";
+            }
+
+            LogicalAnd = "&";
+            LogicalXor = "^";
+            LogicalOr = "|";
+
+            ConditionalAnd = "&&";
+            ConditionalOr = "||";
+
+            Conditional = IfThen | Else
+            {
+                IfThen = "?";
+                Else = ":";
+            }
+        }
+    }
+}

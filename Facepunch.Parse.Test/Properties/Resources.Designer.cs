@@ -122,5 +122,35 @@ namespace Facepunch.Parse.Test.Properties {
                 return ResourceManager.GetString("ExampleLanguage", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whitespace = /\s+/;
+        ///Comment = SingleLine | MultiLine
+        ///{
+        ///    SingleLine = /\/\/[^\n]*(\n|$)/;
+        ///    MultiLine = /\/\*([^\*]|\*[^/])*\*\//;
+        ///}
+        ///
+        ///ignore Whitespace | Comment
+        ///{
+        ///    Ident = /[a-z_][a-z0-9_]*/i;
+        ///
+        ///    Constant = String | Integer | Float | Double
+        ///    {
+        ///        noignore
+        ///        {
+        ///            String = &quot;\&quot;&quot; Value &quot;\&quot;&quot;
+        ///            {
+        ///                Value = Char Value | &quot;&quot;;
+        ///                Char = Unescaped | &quot;\\&quot; Escaped
+        ///                {
+        ///                    Unescaped = /[^&quot;\n]/;
+        ///        [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string ExpressionGrammar {
+            get {
+                return ResourceManager.GetString("ExpressionGrammar", resourceCulture);
+            }
+        }
     }
 }

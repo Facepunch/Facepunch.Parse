@@ -12,8 +12,8 @@ namespace Facepunch.Parse.Test
 
             using ( Parser.AllowWhitespace( " " ) )
             {
-                document.Resolve( word + word );
-                word.Resolve( "A" );
+                document.Define( word + word );
+                word.Define( "A" );
             }
 
             return document;

@@ -59,13 +59,13 @@ namespace Facepunch.Parse
             return _sWhitespaceDisposable;
         }
 
-        public static IDisposable EnableCollapseSingletons()
+        public static IDisposable EnableCollapseIfSingleElement()
         {
             CollapseStateStack.Push( true );
             return _sCollapseStateDisposable;
         }
 
-        public static IDisposable DisableCollapseSingletons()
+        public static IDisposable DisableCollapseIfSingleElement()
         {
             CollapseStateStack.Push( false );
             return _sCollapseStateDisposable;
@@ -112,12 +112,16 @@ namespace Facepunch.Parse
         {
             var result = new ParseResult(source, this);
             Parse( result );
+            if ( CollapseIfSingleElement && result.InnerCount == 1 )
+            {
+                return result[0];
+            }
             return result;
         }
 
         private readonly Parser _whitespaceParser = CurrentWhitespaceParser;
 
-        public virtual bool CollapseSingletons { get; } = false;
+        public virtual bool CollapseIfSingleElement { get; } = false;
         public virtual bool FlattenHierarchy { get; } = false;
         public virtual bool OmitFromResult { get; } = false;
 

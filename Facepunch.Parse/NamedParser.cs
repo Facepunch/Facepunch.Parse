@@ -5,7 +5,7 @@ namespace Facepunch.Parse
 {
     public interface INamedParserResolver
     {
-        Parser Resolve( NamedParser named );
+        bool ResolveDefinition( NamedParser named );
     }
 
     public class NamedParser : Parser
@@ -26,26 +26,44 @@ namespace Facepunch.Parse
 
         private Parser _resolvedParser;
         private readonly string _nameEnd;
+
         private bool _collapseSingletons;
 
         public string Name { get; }
         public string Namespace { get; }
         public INamedParserResolver Resolver { get; }
 
-        public override bool CollapseSingletons => _collapseSingletons;
+        public override bool CollapseIfSingleElement
+        {
+            get
+            {
+                if ( !IsResolved ) AttemptResolve();
+                return _collapseSingletons;
+            }
+        }
 
         public string ResolvedName { get; set; }
 
         public bool IsResolved => _resolvedParser != null;
 
-        public Parser ResolvedParser => _resolvedParser ?? (_resolvedParser = Value);
+        public Parser ResolvedParser => _resolvedParser ?? (_resolvedParser = AttemptResolve());
 
-        protected virtual Parser Value => Resolver?.Resolve( this );
+        protected virtual Parser AttemptResolve()
+        {
+            Resolver?.ResolveDefinition( this );
+            return _resolvedParser;
+        }
 
-        public void Resolve( Parser value )
+        public void Define( Parser value )
         {
             _resolvedParser = value;
             _collapseSingletons = CurrentCollapseState;
+        }
+
+        public void Define( Parser value, bool collapseIfSingleElement )
+        {
+            _resolvedParser = value;
+            _collapseSingletons = collapseIfSingleElement;
         }
 
         protected NamedParser()
@@ -67,7 +85,7 @@ namespace Facepunch.Parse
         {
             if ( ResolvedParser == null ) throw new Exception( $"Could not resolve parser with name '{Name}'" );
 
-            return ResolvedParser.Parse( result );
+            return result.Read( ResolvedParser );
         }
 
         public override string ElementName => ResolvedName ?? Name;

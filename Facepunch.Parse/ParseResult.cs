@@ -213,7 +213,11 @@ namespace Facepunch.Parse
         {
             if ( result.Parser.FlattenHierarchy ) return true;
             if ( result.Parser.Equals( Parser ) ) return true;
-            if ( result.Parser.CollapseSingletons && result.InnerCount <= 1 ) return true;
+            if ( result.Parser.CollapseIfSingleElement )
+            {
+                if ( result.InnerCount == 0 && result.Length == 0 ) return true;
+                if ( result.InnerCount == 1 && result[0].Parser is NamedParser ) return true;
+            }
             return false;
         }
 

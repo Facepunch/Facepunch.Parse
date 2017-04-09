@@ -47,13 +47,13 @@ namespace Facepunch.Parse
             NamedParser parser;
             if ( _namedParsers.TryGetValue( name, out parser ) )
             {
-                parser.Resolve( parser.ResolvedParser | definition );
+                parser.Define( parser.ResolvedParser | definition, parser.CollapseIfSingleElement );
             }
             else
             {
                 parser = new NamedParser( name );
                 _namedParsers.Add( name, parser );
-                parser.Resolve( definition );
+                parser.Define( definition );
             }
         }
 
@@ -69,17 +69,24 @@ namespace Facepunch.Parse
             return string.Join( Environment.NewLine, _namedParsers.Select( x => $"{x.Key} = {x.Value.ResolvedParser};" ).ToArray() );
         }
 
-        private Parser GetExisting( string fullName )
+        private NamedParser GetExisting( string fullName )
         {
             NamedParser parser;
-            return _namedParsers.TryGetValue( fullName, out parser ) ? parser.ResolvedParser : null;
+            return _namedParsers.TryGetValue( fullName, out parser ) ? parser : null;
         }
 
-        public Parser Resolve( NamedParser named )
+        public bool ResolveDefinition( NamedParser named )
         {
             if ( named.Namespace == null )
             {
-                return GetExisting( named.Name );
+                var existing = GetExisting( named.Name );
+                if ( existing != null )
+                {
+                    named.Define( existing.ResolvedParser, existing.CollapseIfSingleElement );
+                    return true;
+                }
+
+                return false;
             }
 
             var splitIndex = named.Namespace.Length;
@@ -90,14 +97,15 @@ namespace Facepunch.Parse
                 if ( existing != null )
                 {
                     named.ResolvedName = name;
-                    return existing;
+                    named.Define( existing.ResolvedParser, existing.CollapseIfSingleElement );
+                    return true;
                 }
                 if ( splitIndex <= 0 ) break;
 
                 splitIndex = named.Namespace.LastIndexOf( ".", splitIndex - 1 );
             }
 
-            return null;
+            return false;
         }
     }
 
@@ -282,7 +290,7 @@ namespace Facepunch.Parse
                     }
                     break;
                 case "collapse":
-                    using ( Parse.Parser.EnableCollapseSingletons() )
+                    using ( Parse.Parser.EnableCollapseIfSingleElement() )
                     {
                         ReadStatementBlock( specialBlock[1], rules );
                     }

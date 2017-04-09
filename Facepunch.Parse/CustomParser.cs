@@ -30,7 +30,7 @@ namespace Facepunch.Parse
         public Parser this[ NamedParser parser ]
         {
             get { return parser; }
-            set { parser.Resolve( value ); }
+            set { parser.Define( value ); }
         }
 
         protected override bool OnParse( ParseResult result )

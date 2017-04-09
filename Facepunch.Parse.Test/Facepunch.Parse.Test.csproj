@@ -83,6 +83,9 @@
   <ItemGroup>
     <None Include="Resources\ExampleInput.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\ExpressionGrammar.txt" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

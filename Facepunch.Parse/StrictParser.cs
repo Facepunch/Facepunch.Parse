@@ -4,7 +4,7 @@
     {
         private readonly Parser _inner;
 
-        public override bool OmitFromResult => true;
+        public override bool FlattenHierarchy => true;
 
         public StrictParser( Parser inner )
         {
