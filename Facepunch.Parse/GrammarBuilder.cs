@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -20,7 +21,9 @@ namespace Facepunch.Parse
     public class GrammarParseException : GrammarException
     {
         public GrammarParseException( ParseResult context )
-            : base( context.Errors.First(), context.ErrorMessage ) { }
+            : base( context.Errors.First(), context.ErrorMessage )
+        {
+        }
     }
 
     public sealed class NamedParserCollection : INamedParserResolver
@@ -66,7 +69,8 @@ namespace Facepunch.Parse
 
         public override string ToString()
         {
-            return string.Join( Environment.NewLine, _namedParsers.Select( x => $"{x.Key} = {x.Value.ResolvedParser};" ).ToArray() );
+            return string.Join( Environment.NewLine,
+                _namedParsers.Select( x => $"{x.Key} = {x.Value.ResolvedParser};" ).ToArray() );
         }
 
         private NamedParser GetExisting( string fullName )
@@ -90,7 +94,7 @@ namespace Facepunch.Parse
             }
 
             var splitIndex = named.Namespace.Length;
-            while (true)
+            while ( true )
             {
                 var name = splitIndex <= 0 ? named.Name : $"{named.Namespace.Substring( 0, splitIndex )}.{named.Name}";
                 var existing = GetExisting( name );
@@ -117,7 +121,7 @@ namespace Facepunch.Parse
         {
             var result = Parser.Parse( str );
             if ( !result.Success ) throw new GrammarParseException( result );
-            
+
             var rules = new NamedParserCollection();
             ReadStatementBlock( result[0], rules );
 
@@ -142,6 +146,8 @@ namespace Facepunch.Parse
 
         private static void ReadDefinition( ParseResult definition, NamedParserCollection rules )
         {
+            Debug.Assert( definition.Parser == Parser.Definition );
+
             var name = definition[0].Value;
 
             rules.PushNamespace( name );
@@ -160,6 +166,8 @@ namespace Facepunch.Parse
 
         private static Parser ReadBranch( ParseResult branch, NamedParserCollection rules )
         {
+            Debug.Assert( branch.Parser == Parser.Branch );
+
             return branch.InnerCount == 1
                 ? ReadConcat( branch[0], rules )
                 : new BranchParser( branch.Select( x => ReadConcat( x, rules ) ) );
@@ -167,6 +175,8 @@ namespace Facepunch.Parse
 
         private static Parser ReadConcat( ParseResult concat, NamedParserCollection rules )
         {
+            Debug.Assert( concat.Parser == Parser.Concat );
+
             return concat.InnerCount == 1
                 ? ReadModifier( concat[0], rules )
                 : new ConcatParser( concat.Select( x => ReadModifier( x, rules ) ) );
@@ -174,9 +184,23 @@ namespace Facepunch.Parse
 
         private static Parser ReadModifier( ParseResult modifier, NamedParserCollection rules )
         {
-            return modifier.InnerCount == 1
-                ? ReadTerm( modifier[0], rules )
-                : new StrictParser( ReadTerm( modifier[1], rules ) );
+            Debug.Assert( modifier.Parser == Parser.Modifier );
+
+            if ( modifier.InnerCount == 1 ) return ReadTerm( modifier[0], rules );
+
+            var term = ReadTerm( modifier[1], rules );
+
+            switch ( modifier[0].Value )
+            {
+                case "?":
+                    return term | "";
+                case "+":
+                    return term.Repeated;
+                case "*":
+                    return term.Repeated.Optional;
+                default:
+                    throw new Exception( $"Unrecognised modifier '{modifier[0].Value}'." );
+            }
         }
 
         private static Parser ReadTerm( ParseResult term, NamedParserCollection rules )
@@ -204,10 +228,18 @@ namespace Facepunch.Parse
                     escaped = false;
                     switch ( c )
                     {
-                        case 'r': builder.Append( '\r' ); break;
-                        case 'n': builder.Append( '\n' ); break;
-                        case 't': builder.Append( '\t' ); break;
-                        default: builder.Append( c ); break;
+                        case 'r':
+                            builder.Append( '\r' );
+                            break;
+                        case 'n':
+                            builder.Append( '\n' );
+                            break;
+                        case 't':
+                            builder.Append( '\t' );
+                            break;
+                        default:
+                            builder.Append( c );
+                            break;
                     }
                 }
                 else if ( c == '\\' )
@@ -238,8 +270,12 @@ namespace Facepunch.Parse
                     escaped = false;
                     switch ( c )
                     {
-                        case '/': builder.Append( '/' ); break;
-                        default: builder.Append( "\\" + c ); break;
+                        case '/':
+                            builder.Append( '/' );
+                            break;
+                        default:
+                            builder.Append( "\\" + c );
+                            break;
                     }
                 }
                 else if ( c == '\\' )
@@ -257,7 +293,9 @@ namespace Facepunch.Parse
             {
                 switch ( options.Value[i] )
                 {
-                    case 'i': parsedOptions |= RegexOptions.IgnoreCase; break;
+                    case 'i':
+                        parsedOptions |= RegexOptions.IgnoreCase;
+                        break;
                 }
             }
 
@@ -272,31 +310,40 @@ namespace Facepunch.Parse
 
         private static void ReadSpecialBlock( ParseResult specialBlock, NamedParserCollection rules )
         {
-            if ( specialBlock[0].InnerCount == 1 )
-            {
-                var ignore = ReadBranch( specialBlock[0][0], rules );
+            var header = specialBlock[0];
+            var block = specialBlock[1];
+            var stack = new Stack<IDisposable>();
 
-                using ( Parse.Parser.AllowWhitespace( ignore ) )
-                {
-                    ReadStatementBlock( specialBlock[1], rules );
-                }
-            }
-            else switch ( specialBlock[0].Value )
+            while ( header != null )
             {
-                case "noignore":
-                    using ( Parse.Parser.ForbidWhitespace() )
+                var item = header[0];
+
+                if ( item.InnerCount == 1 )
+                {
+                    var ignore = ReadBranch( item[0], rules );
+                    stack.Push( Parse.Parser.AllowWhitespace( ignore ) );
+                }
+                else
+                    switch ( item.Value )
                     {
-                        ReadStatementBlock( specialBlock[1], rules );
+                        case "noignore":
+                            stack.Push( Parse.Parser.ForbidWhitespace() );
+                            break;
+                        case "collapse":
+                            stack.Push( Parse.Parser.EnableCollapseIfSingleElement() );
+                            break;
+                        default:
+                            throw new NotImplementedException( item.Value );
                     }
-                    break;
-                case "collapse":
-                    using ( Parse.Parser.EnableCollapseIfSingleElement() )
-                    {
-                        ReadStatementBlock( specialBlock[1], rules );
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException(specialBlock[0].Value);
+
+                header = header.InnerCount == 1 ? null : header[1];
+            }
+
+            ReadStatementBlock( block, rules );
+
+            while ( stack.Count > 0 )
+            {
+                stack.Pop().Dispose();
             }
         }
     }

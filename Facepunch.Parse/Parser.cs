@@ -192,6 +192,16 @@ namespace Facepunch.Parse
             return elem;
         }
 
+        public Parser Repeated
+        {
+            get { return new RepeatedParser( this ); }
+        }
+
+        public Parser Optional
+        {
+            get { return this | ""; }
+        }
+
         public override int GetHashCode()
         {
             return ElementName.GetHashCode();

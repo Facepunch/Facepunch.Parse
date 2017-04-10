@@ -212,7 +212,6 @@ namespace Facepunch.Parse
         private bool ShouldFlattenInner( ParseResult result )
         {
             if ( result.Parser.FlattenHierarchy ) return true;
-            if ( result.Parser.Equals( Parser ) ) return true;
             if ( result.Parser.CollapseIfSingleElement )
             {
                 if ( result.InnerCount == 0 && result.Length == 0 ) return true;

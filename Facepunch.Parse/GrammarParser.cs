@@ -12,12 +12,13 @@ namespace Facepunch.Parse
         public NamedParser Statement;
         public NamedParser SpecialBlock;
         public NamedParser SpecialBlockHeader;
+        public NamedParser SpecialBlockType;
         public NamedParser IgnoreBlockHeader;
         public NamedParser Definition;
         public NamedParser Branch;
         public NamedParser Concat;
         public NamedParser Modifier;
-        public NamedParser ModifierPrefix;
+        public NamedParser ModifierPostfix;
         public NamedParser Term;
         public NamedParser NonTerminal;
         public NamedParser String;
@@ -41,20 +42,21 @@ namespace Facepunch.Parse
             this[StringValueDouble] = new Regex( @"(\\[\\""rnt]|[^\\""])*" );
             this[Regex] = "/" + RegexValue + "/" + RegexOptions;
             this[RegexValue] = new Regex( @"(\\.|\[[^\]]+\]|[^\\[/])+" );
-            this[RegexOptions] = "" | (RegexOption + RegexOptions);
+            this[RegexOptions] = RegexOption.Repeated.Optional;
             this[RegexOption] = "i";
 
             using ( AllowWhitespace( Ignore ) )
             {
-                this[StatementBlock] = Statement + (StatementBlock | "");
-                this[Statement] = Definition | SpecialBlock;
+                this[StatementBlock] = Statement.Repeated;
+                this[Statement] = SpecialBlock | Definition;
                 this[SpecialBlock] = SpecialBlockHeader + "{" + StatementBlock + "}";
-                this[SpecialBlockHeader] = "ignore" + Branch | "noignore" | "collapse";
-                this[Definition] = NonTerminal + "=" + Branch + (";" | "{" + StatementBlock + "}");
-                this[Branch] = Concat + ("|" + Branch | "");
-                this[Concat] = Modifier + (Concat | "");
-                this[ModifierPrefix] = "$";
-                this[Modifier] = (ModifierPrefix + Term) | Term;
+                this[SpecialBlockHeader] = SpecialBlockType + ("," + SpecialBlockType).Repeated.Optional;
+                this[SpecialBlockType] = "ignore" + Branch | "noignore" | "collapse";
+                this[Definition] = NonTerminal + ("=" + Branch).Optional + (";" | "{" + StatementBlock + "}");
+                this[Branch] = Concat + ("|" + Concat).Repeated.Optional;
+                this[Concat] = Modifier.Repeated;
+                this[Modifier] = Term + ModifierPostfix.Optional;
+                this[ModifierPostfix] = (Parser)"?" | "*" | "+";
                 this[Term] = String | Regex | NonTerminal | "(" + Branch + ")";
             }
 
