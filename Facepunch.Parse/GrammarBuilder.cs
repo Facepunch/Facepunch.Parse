@@ -152,16 +152,24 @@ namespace Facepunch.Parse
 
             rules.PushNamespace( name );
 
-            if ( definition.InnerCount > 2 )
+            var branch = definition.FirstOrDefault( x => x.Parser == Parser.Branch );
+            var statementBlock = definition.FirstOrDefault( x => x.Parser == Parser.StatementBlock );
+
+            if ( statementBlock != null )
             {
-                ReadStatementBlock( definition[2], rules );
+                ReadStatementBlock( statementBlock, rules );
             }
 
-            var parser = ReadBranch( definition[1], rules );
+            Parser parser = null;
+
+            if ( branch != null )
+            {
+                parser = ReadBranch( branch, rules );
+            }
 
             rules.PopNamespace();
 
-            rules.Add( name, parser );
+            if ( parser != null ) rules.Add( name, parser );
         }
 
         private static Parser ReadBranch( ParseResult branch, NamedParserCollection rules )
