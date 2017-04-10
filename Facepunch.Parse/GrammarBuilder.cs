@@ -196,9 +196,9 @@ namespace Facepunch.Parse
 
             if ( modifier.InnerCount == 1 ) return ReadTerm( modifier[0], rules );
 
-            var term = ReadTerm( modifier[1], rules );
+            var term = ReadTerm( modifier[0], rules );
 
-            switch ( modifier[0].Value )
+            switch ( modifier[1].Value )
             {
                 case "?":
                     return term | "";
@@ -213,6 +213,8 @@ namespace Facepunch.Parse
 
         private static Parser ReadTerm( ParseResult term, NamedParserCollection rules )
         {
+            Debug.Assert(term.Parser == Parser.Term);
+
             var value = term[0];
             if ( value.Parser == Parser.String ) return ReadString( value, rules );
             if ( value.Parser == Parser.Regex ) return ReadRegex( value, rules );

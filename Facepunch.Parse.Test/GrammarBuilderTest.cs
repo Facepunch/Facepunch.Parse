@@ -123,6 +123,7 @@ namespace Facepunch.Parse.Test
             ");
         }
 
+        [TestMethod]
         public void Modifiers1()
         {
             TestHelper.Test(GetGrammar4()["Document"], "Hello( World() ), How( Are( You(), Today() ), Foo() )", true);
