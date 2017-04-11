@@ -25,6 +25,9 @@ namespace Facepunch.Parse
         private int _lineNumber;
         private int _columnNumber;
 
+        private int _lineIndex;
+        private int _lineLength;
+
         private string _errorMessage;
         private string _innerMessage;
         private List<ParseResult> _errorResults;
@@ -43,7 +46,7 @@ namespace Facepunch.Parse
         {
             get
             {
-                if ( _lineNumber == 0 ) GetLineCol( Index, out _lineNumber, out _columnNumber );
+                if ( _lineNumber == 0 ) GetLineCol( Index );
                 return _lineNumber;
             }
         }
@@ -52,7 +55,7 @@ namespace Facepunch.Parse
         {
             get
             {
-                if ( _columnNumber == 0 ) GetLineCol( Index, out _lineNumber, out _columnNumber );
+                if ( _columnNumber == 0 ) GetLineCol( Index );
                 return _columnNumber;
             }
         }
@@ -62,6 +65,8 @@ namespace Facepunch.Parse
         public bool Success { get; private set; }
 
         public string Value => _source.Substring( TrimmedIndex, TrimmedLength );
+        public string SourceLine => _source.Substring( _lineIndex, _lineLength );
+        public string Source => _source;
 
         public string ErrorMessage => GetErrorMessage();
         public ParseError ErrorType { get; private set; }
@@ -91,18 +96,31 @@ namespace Facepunch.Parse
             ? _inner.Max( x => x.MaxErrorIndex )
             : ErrorType == ParseError.None ? -1 : Index;
 
-        private void GetLineCol( int index, out int line, out int col )
+        private void GetLineCol( int index )
         {
-            line = 1;
-            col = 1;
+            _lineNumber = 1;
+            _columnNumber = 1;
 
             for ( var i = 0; i < index; ++i )
             {
                 switch ( _source[i] )
                 {
-                    case '\r': col = 1; break;
-                    case '\n': ++line; col = 1; break;
-                    default: ++col; break;
+                    case '\r': _columnNumber = 1; break;
+                    case '\n': ++_lineNumber; _columnNumber = 1; _lineIndex = i + 1; break;
+                    default: ++_columnNumber; break;
+                }
+            }
+
+            _lineLength = _source.Length - _lineIndex;
+
+            for ( var i = index; i < _source.Length; ++i )
+            {
+                switch ( _source[i] )
+                {
+                    case '\r':
+                    case '\n':
+                        _lineLength = i - _lineIndex;
+                        return;
                 }
             }
         }
@@ -202,9 +220,6 @@ namespace Facepunch.Parse
 
                 builder.Append( distinct[i] );
             }
-
-            int line, col;
-            GetLineCol( errors[0].Index, out line, out col );
 
             return _innerMessage = $"Expected {builder}";
         }
