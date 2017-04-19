@@ -21,7 +21,7 @@ namespace Facepunch.Parse
         private static readonly CollapseStateDisposable _sCollapseStateDisposable = new CollapseStateDisposable();
         protected static bool CurrentCollapseState => CollapseStateStack.Count != 0 && CollapseStateStack.Peek();
 
-        public static Parser EndOfInput { get; } = new RegexParser( new Regex( "$", RegexOptions.Compiled ) );
+        public static Parser EndOfInput { get; } = new RegexParser( new Regex( "$" ) );
 
         private class WhitespaceDisposable : IDisposable
         {
