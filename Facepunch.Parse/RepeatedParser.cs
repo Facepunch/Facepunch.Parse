@@ -19,15 +19,17 @@ namespace Facepunch.Parse
             _inner = inner;
         }
 
-        protected override bool OnParse( ParseResult result )
+        protected override bool OnParse( ParseResult result, bool errorPass )
         {
-            if ( !result.Read( _inner ) ) return false;
+            if ( !result.Read( _inner, errorPass) ) return false;
 
             ParseResult peek;
-            while ( (peek = result.Peek( _inner )).Success )
+            while ( (peek = result.Peek( _inner, errorPass)).Success )
             {
-                result.Apply( peek );
+                result.Apply( peek, errorPass );
             }
+
+            peek.Dispose();
 
             return true;
         }

@@ -35,13 +35,13 @@ namespace Facepunch.Parse
             }
         }
 
-        protected override bool OnParse( ParseResult result )
+        protected override bool OnParse( ParseResult result, bool errorPass )
         {
             if ( _inner.Count == 0 ) return false;
             
             foreach ( var parser in _inner )
             {
-                if ( !result.Read( parser ) ) return false;
+                if ( !result.Read( parser, errorPass ) ) return false;
             }
 
             return true;

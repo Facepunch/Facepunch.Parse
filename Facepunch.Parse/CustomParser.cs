@@ -33,10 +33,10 @@ namespace Facepunch.Parse
             set { parser.Define( value ); }
         }
 
-        protected override bool OnParse( ParseResult result )
+        protected override bool OnParse( ParseResult result, bool errorPass )
         {
             if ( !IsDefined ) Define();
-            return result.Read( _definedParser );
+            return result.Read( _definedParser, errorPass );
         }
     }
 }

@@ -17,9 +17,76 @@ namespace Facepunch.Parse
         NullParser
     }
 
-    public sealed class ParseResult : IEnumerable<ParseResult>
+    internal sealed class ParseResultPool
     {
-        private readonly string _source;
+        public int Capacity { get; }
+
+        public ParseResultPool( int capacity = 512 )
+        {
+            Capacity = capacity;
+        }
+
+        private readonly List<ParseResult> _pool = new List<ParseResult>();
+        private readonly List<List<ParseResult>> _listPool = new List<List<ParseResult>>();
+
+        public ParseResult Create()
+        {
+            if ( _pool.Count > 0 )
+            {
+                var last = _pool[_pool.Count - 1];
+                _pool.RemoveAt( _pool.Count - 1 );
+                return last;
+            }
+
+            return new ParseResult( this );
+        }
+
+        public void Release( ParseResult result )
+        {
+            if ( result.Parser == null )
+            {
+                throw new Exception( "Result disposed twice!" );
+            }
+
+            if ( _pool.Count < Capacity )
+            {
+                result.Clear();
+                _pool.Add( result );
+            }
+        }
+
+        public List<ParseResult> CreateList()
+        {
+            if ( _listPool.Count > 0 )
+            {
+                var last = _listPool[_listPool.Count - 1];
+                _listPool.RemoveAt( _listPool.Count - 1 );
+                return last;
+            }
+
+            return new List<ParseResult>();
+        }
+
+        public void ReleaseList( List<ParseResult> list )
+        {
+            foreach ( var item in list )
+            {
+                if ( item.Parent == null && item.Parser != null ) item.Dispose();
+            }
+
+            if ( _pool.Count < Capacity )
+            {
+                list.Clear();
+                _listPool.Add( list );
+            }
+        }
+    }
+
+    public sealed class ParseResult : IEnumerable<ParseResult>, IDisposable
+    {
+        private readonly ParseResultPool _pool;
+
+        private string _source;
         private readonly List<ParseResult> _inner = new List<ParseResult>();
 
         private int _lineNumber;
@@ -32,11 +99,11 @@ namespace Facepunch.Parse
         private string _innerMessage;
         private List<ParseResult> _errorResults;
 
-        public Parser Parser { get; }
+        public Parser Parser { get; private set; }
 
         public ParseResult Parent { get; private set; }
 
-        public int Index { get; }
+        public int Index { get; private set; }
         public int TrimmedIndex { get; private set; }
 
         public int Length { get; private set; }
@@ -90,7 +157,9 @@ namespace Facepunch.Parse
         public int InnerCount => _inner.Count;
 
         public ParseResult this[ int index ] => _inner[index];
-        public ParseResult this[ string elementName ] => _inner.FirstOrDefault( x => x.Parser.ElementName == elementName );
+
+        public ParseResult this[ string elementName ]
+            => _inner.FirstOrDefault( x => x.Parser.ElementName == elementName );
 
         public int MaxErrorIndex => ErrorType == ParseError.SubParser && _inner.Count > 0
             ? _inner.Max( x => x.MaxErrorIndex )
@@ -105,9 +174,17 @@ namespace Facepunch.Parse
             {
                 switch ( _source[i] )
                 {
-                    case '\r': _columnNumber = 1; break;
-                    case '\n': ++_lineNumber; _columnNumber = 1; _lineIndex = i + 1; break;
-                    default: ++_columnNumber; break;
+                    case '\r':
+                        _columnNumber = 1;
+                        break;
+                    case '\n':
+                        ++_lineNumber;
+                        _columnNumber = 1;
+                        _lineIndex = i + 1;
+                        break;
+                    default:
+                        ++_columnNumber;
+                        break;
                 }
             }
 
@@ -125,17 +202,21 @@ namespace Facepunch.Parse
             }
         }
 
-        internal ParseResult( string source, Parser parser )
+        internal ParseResult( ParseResultPool pool )
+        {
+            _pool = pool;
+        }
+
+        internal void Init( string source, Parser parser )
         {
             _source = source;
             Parser = parser;
             Success = true;
         }
 
-        internal ParseResult( ParseResult parent, Parser parser )
-            : this( parent._source, parser )
+        internal void Init( ParseResult parent, Parser parser )
         {
-            Parent = parent;
+            Init( parent.Source, parser );
             TrimmedIndex = Index = parent.Index + parent.Length;
         }
 
@@ -203,12 +284,12 @@ namespace Facepunch.Parse
                 return _innerMessage = string.Empty;
             }
 
-            var nonExpect = errors.FirstOrDefault(x => x.ErrorType != ParseError.ExpectedToken);
+            var nonExpect = errors.FirstOrDefault( x => x.ErrorType != ParseError.ExpectedToken );
             if ( nonExpect != null ) return _innerMessage = nonExpect.ErrorMessage;
 
             var builder = new StringBuilder();
 
-            var distinct = errors.Select(x => x.Expected).Distinct().ToArray();
+            var distinct = errors.Select( x => x.Expected ).Distinct().ToArray();
 
             for ( var i = 0; i < distinct.Length; ++i )
             {
@@ -235,7 +316,7 @@ namespace Facepunch.Parse
             return false;
         }
 
-        private void AddInner( ParseResult result )
+        private void AddInner( ParseResult result, bool errorPass )
         {
             var len = result.ReadPos - Index;
             if ( Length < len )
@@ -246,6 +327,12 @@ namespace Facepunch.Parse
 
             Success &= result.Success;
 
+            if ( !errorPass && !result.Success )
+            {
+                result.Dispose();
+                return;
+            }
+
             if ( !ShouldFlattenInner( result ) )
             {
                 if ( !result.Parser.OmitFromResult || !result.Success )
@@ -253,14 +340,20 @@ namespace Facepunch.Parse
                     _inner.Add( result );
                     result.Parent = this;
                 }
+                else
+                {
+                    result.Dispose();
+                }
 
                 return;
             }
 
             foreach ( var inner in result )
             {
-                AddInner( inner );
+                AddInner( inner, errorPass );
             }
+
+            result.Dispose();
         }
 
         public bool Error( ParseError type, string message )
@@ -271,14 +364,14 @@ namespace Facepunch.Parse
             return false;
         }
 
-        public bool Error( ParseResult inner )
+        public bool Error( ParseResult inner, bool errorPass )
         {
             Success = false;
             if ( ErrorType == ParseError.None )
             {
                 ErrorType = ParseError.SubParser;
             }
-            AddInner( inner );
+            AddInner( inner, errorPass );
             return false;
         }
 
@@ -313,41 +406,45 @@ namespace Facepunch.Parse
             return true;
         }
 
-        public bool Read( Parser parser )
+        public bool Read( Parser parser, bool errorPass )
         {
-            var result = Peek(parser);
-            if ( result.Success ) Apply( result );
-            else Error( result );
+            var result = Peek( parser, errorPass );
+            if ( result.Success ) Apply( result, errorPass );
+            else Error( result, errorPass );
             return result.Success;
         }
 
         public void Skip( ParseResult inner )
         {
-            if ( inner.Parent != this ) throw new ArgumentException();
             if ( inner.Index != ReadPos ) throw new ArgumentException();
 
             Length = inner.ReadPos - Index;
             if ( TrimmedLength == 0 ) TrimmedIndex = inner.ReadPos;
+
+            inner.Dispose();
         }
 
-        public void Apply( ParseResult inner )
+        public void Apply( ParseResult inner, bool errorPass )
         {
-            if ( inner.Parent != this ) throw new ArgumentException();
             if ( inner.Index != ReadPos ) throw new ArgumentException();
 
-            AddInner( inner );
+            AddInner( inner, errorPass );
         }
 
-        public ParseResult Peek( Parser parser )
+        public ParseResult Peek( Parser parser, bool errorPass )
         {
-            var inner = new ParseResult(this, parser);
-            parser.Parse( inner );
+            var inner = _pool.Create();
+            inner.Init( this, parser );
+            parser.Parse( inner, errorPass );
             return inner;
         }
 
         public bool IsBetterThan( ParseResult other )
         {
-            return other == null || ErrorType != ParseError.NullParser && (ReadPos > other.ReadPos || ReadPos == other.ReadPos && Success && !other.Success) || other.ErrorType == ParseError.NullParser;
+            return other == null ||
+                   ErrorType != ParseError.NullParser &&
+                   (ReadPos > other.ReadPos || ReadPos == other.ReadPos && Success && !other.Success) ||
+                   other.ErrorType == ParseError.NullParser;
         }
 
         public XElement ToXElement()
@@ -368,6 +465,48 @@ namespace Facepunch.Parse
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        internal void Clear()
+        {
+            Parser = null;
+            Parent = null;
+
+            Index = 0;
+            TrimmedIndex = 0;
+            Length = 0;
+            TrimmedLength = 0;
+            Success = false;
+            ErrorType = ParseError.None;
+
+            _source = null;
+            _lineNumber = 0;
+            _columnNumber = 0;
+            _lineIndex = 0;
+            _lineLength = 0;
+            _errorMessage = null;
+            _errorResults = null;
+        }
+
+        public void Dispose()
+        {
+            if ( Parser == null ) return;
+            if ( Parent != null )
+            {
+                throw new Exception( "Can't dispose a ParseResult with a parent." );
+            }
+
+            foreach ( var inner in _inner )
+            {
+                if ( inner.Parent == this || inner.Parent == null )
+                {
+                    inner.Parent = null;
+                    inner.Dispose();
+                }
+            }
+
+            _inner.Clear();
+            _pool.Release( this );
         }
     }
 }

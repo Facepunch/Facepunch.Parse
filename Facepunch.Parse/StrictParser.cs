@@ -11,11 +11,11 @@
             _inner = inner;
         }
 
-        protected override bool OnParse( ParseResult result )
+        protected override bool OnParse( ParseResult result, bool errorPass )
         {
-            var next = result.Peek( _inner );
-            if ( next.Success ) result.Apply( next );
-            else result.Error( result.ErrorType, result.ErrorMessage );
+            var next = result.Peek( _inner, errorPass);
+            if ( next.Success ) result.Apply( next, errorPass );
+            else result.Error( result, errorPass );
             return next.Success;
         }
 
