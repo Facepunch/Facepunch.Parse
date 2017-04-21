@@ -8,6 +8,10 @@ namespace Facepunch.Parse
     public abstract class Parser : IEquatable<Parser>
     {
         [ThreadStatic]
+        private static ParseResultPool _sResultPool;
+        internal static ParseResultPool ResultPool => _sResultPool ?? (_sResultPool = new ParseResultPool());
+
+        [ThreadStatic]
         private static Stack<Parser> _sWhitespaceParserStack;
         private static Stack<Parser> WhitespaceParserStack => _sWhitespaceParserStack ?? (_sWhitespaceParserStack = new Stack<Parser>());
 
@@ -110,12 +114,22 @@ namespace Facepunch.Parse
 
         public ParseResult Parse( string source )
         {
-            var result = new ParseResult(source, this);
-            Parse( result );
+            var result = new ParseResult( ResultPool );
+            result.Init( source, this );
+
+            if ( !Parse( result, false ) || !result.Success )
+            {
+                result.Dispose();
+                result = new ParseResult( ResultPool );
+                result.Init( source, this );
+                Parse( result, true );
+            }
+
             if ( CollapseIfSingleElement && result.InnerCount == 1 )
             {
                 return result[0];
             }
+
             return result;
         }
 
@@ -125,23 +139,25 @@ namespace Facepunch.Parse
         public virtual bool FlattenHierarchy { get; } = false;
         public virtual bool OmitFromResult { get; } = false;
 
-        protected abstract bool OnParse( ParseResult result );
+        protected abstract bool OnParse( ParseResult result, bool errorPass );
 
         private void SkipWhitespace(ParseResult result)
         {
             if ( _whitespaceParser == null ) return;
 
             ParseResult whitespace;
-            while ( (whitespace = result.Peek( _whitespaceParser )).Success && whitespace.Length > 0 )
+            while ( (whitespace = result.Peek( _whitespaceParser, false )).Success && whitespace.Length > 0 )
             {
                 result.Skip( whitespace );
             }
+
+            whitespace.Dispose();
         }
 
-        public bool Parse( ParseResult result )
+        public bool Parse( ParseResult result, bool errorPass )
         {
             SkipWhitespace( result );
-            if ( !OnParse( result ) ) return false;
+            if ( !OnParse( result, errorPass ) ) return false;
             SkipWhitespace( result );
             return true;
         }

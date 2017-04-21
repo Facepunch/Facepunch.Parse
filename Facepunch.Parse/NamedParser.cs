@@ -81,11 +81,11 @@ namespace Facepunch.Parse
             _nameEnd = name.Substring( name.LastIndexOf( "." ) + 1 );
         }
 
-        protected override bool OnParse( ParseResult result )
+        protected override bool OnParse( ParseResult result, bool errorPass )
         {
             if ( ResolvedParser == null ) throw new Exception( $"Could not resolve parser with name '{Name}'" );
 
-            return result.Read( ResolvedParser );
+            return result.Read( ResolvedParser, errorPass );
         }
 
         public override string ElementName => ResolvedName ?? Name;

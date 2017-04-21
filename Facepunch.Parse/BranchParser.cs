@@ -34,17 +34,18 @@ namespace Facepunch.Parse
             _inner.AddRange( inner );
         }
 
-        protected override bool OnParse( ParseResult result )
+        protected override bool OnParse( ParseResult result, bool errorPass )
         {
             if ( _inner.Count == 0 ) return false;
-            if ( result.GetIsInfiniteRecursion() ) return result.Error( ParseError.InvalidGrammar, "Grammar contains left recursion" );
+            if ( result.GetIsInfiniteRecursion() )
+                return result.Error( ParseError.InvalidGrammar, "Grammar contains left recursion" );
 
-            var results = new List<ParseResult>();
+            var results = ResultPool.CreateList();
 
             ParseResult bestResult = null;
             foreach ( var parser in _inner )
             {
-                var inner = result.Peek(parser);
+                var inner = result.Peek( parser, errorPass );
                 results.Add( inner );
                 if ( inner.IsBetterThan( bestResult ) ) bestResult = inner;
             }
@@ -52,16 +53,22 @@ namespace Facepunch.Parse
             Debug.Assert( bestResult != null, "bestResult != null" );
             if ( bestResult.Success )
             {
-                result.Apply( bestResult );
+                result.Apply( bestResult, errorPass );
+                ResultPool.ReleaseList( results );
                 return true;
             }
 
             var max = results.Max( x => x.MaxErrorIndex );
 
-            foreach ( var parseResult in results.Where( x => x.MaxErrorIndex == max ) )
+            foreach ( var parseResult in results )
             {
-                result.Error( parseResult );
+                if ( parseResult.MaxErrorIndex == max )
+                {
+                    result.Error( parseResult, errorPass );
+                }
             }
+
+            ResultPool.ReleaseList( results );
             return false;
         }
 
