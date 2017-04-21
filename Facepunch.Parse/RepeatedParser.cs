@@ -24,7 +24,7 @@ namespace Facepunch.Parse
             if ( !result.Read( _inner, errorPass) ) return false;
 
             ParseResult peek;
-            while ( (peek = result.Peek( _inner, errorPass)).Success )
+            while ( (peek = result.Peek( _inner, errorPass)).Success && peek.Length > 0 )
             {
                 result.Apply( peek, errorPass );
             }

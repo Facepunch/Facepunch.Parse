@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -71,7 +72,7 @@ namespace Facepunch.Parse
         {
             foreach ( var item in list )
             {
-                if ( item.Parent == null && item.Parser != null ) item.Dispose();
+                if ( item.Parent == null ) item.Dispose();
             }
 
             if ( _pool.Count < Capacity )
@@ -85,6 +86,8 @@ namespace Facepunch.Parse
     public sealed class ParseResult : IEnumerable<ParseResult>, IDisposable
     {
         private readonly ParseResultPool _pool;
+
+        private bool _disposed = true;
 
         private string _source;
         private readonly List<ParseResult> _inner = new List<ParseResult>();
@@ -129,7 +132,16 @@ namespace Facepunch.Parse
 
         private int ReadPos => Index + Length;
 
-        public bool Success { get; private set; }
+        private bool _success;
+
+        public bool Success
+        {
+            get
+            {
+                if ( _disposed ) throw new ObjectDisposedException( nameof( ParseResult ) );
+                return _success;
+            }
+        }
 
         public string Value => _source.Substring( TrimmedIndex, TrimmedLength );
         public string SourceLine => _source.Substring( _lineIndex, _lineLength );
@@ -209,9 +221,10 @@ namespace Facepunch.Parse
 
         internal void Init( string source, Parser parser )
         {
+            _disposed = false;
             _source = source;
             Parser = parser;
-            Success = true;
+            _success = true;
         }
 
         internal void Init( ParseResult parent, Parser parser )
@@ -325,7 +338,7 @@ namespace Facepunch.Parse
                 TrimmedLength = result.Index + result.TrimmedLength - TrimmedIndex;
             }
 
-            Success &= result.Success;
+            _success &= result.Success;
 
             if ( !errorPass && !result.Success )
             {
@@ -337,8 +350,8 @@ namespace Facepunch.Parse
             {
                 if ( !result.Parser.OmitFromResult || !result.Success )
                 {
-                    _inner.Add( result );
                     result.Parent = this;
+                    _inner.Add( result );
                 }
                 else
                 {
@@ -358,7 +371,7 @@ namespace Facepunch.Parse
 
         public bool Error( ParseError type, string message )
         {
-            Success = false;
+            _success = false;
             ErrorType = type;
             _errorMessage = message;
             return false;
@@ -366,7 +379,7 @@ namespace Facepunch.Parse
 
         public bool Error( ParseResult inner, bool errorPass )
         {
-            Success = false;
+            _success = false;
             if ( ErrorType == ParseError.None )
             {
                 ErrorType = ParseError.SubParser;
@@ -409,9 +422,14 @@ namespace Facepunch.Parse
         public bool Read( Parser parser, bool errorPass )
         {
             var result = Peek( parser, errorPass );
-            if ( result.Success ) Apply( result, errorPass );
-            else Error( result, errorPass );
-            return result.Success;
+            if ( result.Success )
+            {
+                Apply( result, errorPass );
+                return true;
+            }
+
+            Error( result, errorPass );
+            return false;
         }
 
         public void Skip( ParseResult inner )
@@ -476,9 +494,9 @@ namespace Facepunch.Parse
             TrimmedIndex = 0;
             Length = 0;
             TrimmedLength = 0;
-            Success = false;
             ErrorType = ParseError.None;
 
+            _success = false;
             _source = null;
             _lineNumber = 0;
             _columnNumber = 0;
@@ -490,11 +508,13 @@ namespace Facepunch.Parse
 
         public void Dispose()
         {
-            if ( Parser == null ) return;
+            if ( _disposed ) return;
             if ( Parent != null )
             {
                 throw new Exception( "Can't dispose a ParseResult with a parent." );
             }
+
+            _disposed = true;
 
             foreach ( var inner in _inner )
             {
