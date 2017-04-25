@@ -30,15 +30,28 @@ namespace Facepunch.Parse
         private readonly List<ParseResult> _pool = new List<ParseResult>();
         private readonly List<List<ParseResult>> _listPool = new List<List<ParseResult>>();
 
+        public int CreatedNew { get; private set; }
+        public int CreatedPooled { get; private set; }
+
+        public void ResetPooledCounter()
+        {
+            CreatedNew = 0;
+            CreatedPooled = 0;
+        }
+
+        public double PooledRatio => CreatedPooled / (double) (CreatedPooled + CreatedNew);
+
         public ParseResult Create()
         {
             if ( _pool.Count > 0 )
             {
                 var last = _pool[_pool.Count - 1];
                 _pool.RemoveAt( _pool.Count - 1 );
+                ++CreatedPooled;
                 return last;
             }
 
+            ++CreatedNew;
             return new ParseResult( this );
         }
 

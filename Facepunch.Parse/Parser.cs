@@ -11,6 +11,13 @@ namespace Facepunch.Parse
         private static ParseResultPool _sResultPool;
         internal static ParseResultPool ResultPool => _sResultPool ?? (_sResultPool = new ParseResultPool());
 
+        public static double PooledRatio => ResultPool.PooledRatio;
+
+        public static void ResetPooledCounter()
+        {
+            ResultPool.ResetPooledCounter();
+        }
+
         [ThreadStatic]
         private static Stack<Parser> _sWhitespaceParserStack;
         private static Stack<Parser> WhitespaceParserStack => _sWhitespaceParserStack ?? (_sWhitespaceParserStack = new Stack<Parser>());
