@@ -31,12 +31,16 @@ namespace Facepunch.Parse
 
         protected override Parser OnDefine()
         {
+            Parser ignore = "ignore";
+            Parser noignore = "noignore";
+            Parser collapse = "collapse";
+
             var regexOptions = RegexParser.Compiled
                 ? System.Text.RegularExpressions.RegexOptions.Compiled
                 : System.Text.RegularExpressions.RegexOptions.None;
 
             this[Ignore] = Whitespace | SingleLineComment | MultiLineComment;
-            this[Whitespace] = new Regex( @"\s", regexOptions );
+            this[Whitespace] = new Regex( @"\s+", regexOptions );
             this[SingleLineComment] = new Regex( @"//[^\n]*(\n|$)", regexOptions);
             this[MultiLineComment] = new Regex( @"/\*([^*]|\*[^/])*\*/", regexOptions);
 
@@ -55,8 +59,8 @@ namespace Facepunch.Parse
                 this[Statement] = SpecialBlock | Definition;
                 this[SpecialBlock] = SpecialBlockHeader + "{" + StatementBlock + "}";
                 this[SpecialBlockHeader] = SpecialBlockType + ("," + SpecialBlockType).Repeated.Optional;
-                this[SpecialBlockType] = "ignore" + Branch | "noignore" | "collapse";
-                this[Definition] = NonTerminal + ("=" + Branch).Optional + (";" | "{" + StatementBlock + "}");
+                this[SpecialBlockType] = ignore + Branch | noignore | collapse;
+                this[Definition] = !(ignore | noignore | collapse) + NonTerminal + ("=" + Branch).Optional + (";" | "{" + StatementBlock + "}");
                 this[Branch] = Concat + ("|" + Concat).Repeated.Optional;
                 this[Concat] = Modifier.Repeated;
                 this[Modifier] = Term + ModifierPostfix.Optional;

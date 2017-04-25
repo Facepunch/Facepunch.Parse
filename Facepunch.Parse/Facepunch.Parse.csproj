@@ -47,6 +47,7 @@
     <Compile Include="GrammarBuilder.cs" />
     <Compile Include="GrammarParser.cs" />
     <Compile Include="NamedParser.cs" />
+    <Compile Include="NotParser.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="ParseResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

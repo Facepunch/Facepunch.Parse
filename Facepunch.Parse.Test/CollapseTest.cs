@@ -21,13 +21,13 @@ namespace Facepunch.Parse.Test
         [TestMethod]
         public void CollapseBuilder2()
         {
-            Assert.IsTrue(CreateGrammar()["Expression.Conditional"].CollapseIfSingleElement);
+            Assert.IsTrue( CreateGrammar()["Expression.Conditional"].CollapseIfSingleElement );
         }
 
         [TestMethod]
         public void CollapseBuilder3()
         {
-            Assert.IsTrue(CreateGrammar()["Expression.ConditionalOr"].CollapseIfSingleElement);
+            Assert.IsTrue( CreateGrammar()["Expression.ConditionalOr"].CollapseIfSingleElement );
         }
 
         [TestMethod]

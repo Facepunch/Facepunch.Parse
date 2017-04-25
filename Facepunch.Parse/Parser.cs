@@ -95,6 +95,11 @@ namespace Facepunch.Parse
             return new RegexParser( regex );
         }
 
+        public static NotParser operator !( Parser parser )
+        {
+            return new NotParser( parser );
+        }
+
         public static ConcatParser operator +( Parser a, Parser b )
         {
             var aConcat = a as ConcatParser;
@@ -153,7 +158,7 @@ namespace Facepunch.Parse
         private void SkipWhitespace(ParseResult result)
         {
             if (WhitespaceParser == null ) return;
-            if ( result.WhitespaceIndex == result.Index ) return;
+            if ( result.LastReadWhitespace ) return;
 
             ParseResult whitespace;
             while ( (whitespace = result.Peek(WhitespaceParser, false )).Success && whitespace.Length > 0 )
@@ -163,7 +168,7 @@ namespace Facepunch.Parse
 
             whitespace.Dispose();
 
-            result.WhitespaceIndex = result.Index;
+            result.LastReadWhitespace = true;
         }
 
         public bool Parse( ParseResult result, bool errorPass )
@@ -228,6 +233,11 @@ namespace Facepunch.Parse
         public Parser Optional
         {
             get { return this | ""; }
+        }
+
+        public Parser Not
+        {
+            get { return !this; }
         }
 
         public override int GetHashCode()

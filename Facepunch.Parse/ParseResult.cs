@@ -125,7 +125,7 @@ namespace Facepunch.Parse
         public int Length { get; private set; }
         public int TrimmedLength { get; private set; }
 
-        internal int WhitespaceIndex { get; set; } = -1;
+        internal bool LastReadWhitespace { get; set; } = false;
 
         public int LineNumber
         {
@@ -239,6 +239,7 @@ namespace Facepunch.Parse
             _disposed = false;
             _source = source;
             Parser = parser;
+            LastReadWhitespace = false;
             _success = true;
         }
 
@@ -246,7 +247,7 @@ namespace Facepunch.Parse
         {
             Init( parent.Source, parser );
             TrimmedIndex = Index = parent.Index + parent.Length;
-            WhitespaceIndex = parent.Parser.WhitespaceParser == parser.WhitespaceParser ? parent.WhitespaceIndex : -1;
+            LastReadWhitespace = parent.Parser.WhitespaceParser == parser.WhitespaceParser && parent.LastReadWhitespace;
         }
 
         private bool IsIdentical( ParseResult other )
@@ -352,6 +353,7 @@ namespace Facepunch.Parse
             {
                 Length = len;
                 TrimmedLength = result.Index + result.TrimmedLength - TrimmedIndex;
+                LastReadWhitespace = LastReadWhitespace && result.Length == 0 || result.LastReadWhitespace && result.Parser.WhitespaceParser == Parser.WhitespaceParser;
             }
 
             _success &= result.Success;
@@ -417,6 +419,7 @@ namespace Facepunch.Parse
 
             Length += token.Length;
             TrimmedLength += token.Length;
+            LastReadWhitespace = LastReadWhitespace && token.Length == 0;
             return true;
         }
 
@@ -432,6 +435,7 @@ namespace Facepunch.Parse
             if ( !match.Success || match.Index != ReadPos ) return false;
             Length += match.Length;
             TrimmedLength += match.Length;
+            LastReadWhitespace = LastReadWhitespace && match.Length == 0;
             return true;
         }
 
@@ -454,6 +458,8 @@ namespace Facepunch.Parse
 
             Length = inner.ReadPos - Index;
             if ( TrimmedLength == 0 ) TrimmedIndex = inner.ReadPos;
+
+            LastReadWhitespace = LastReadWhitespace && inner.Length == 0 || inner.LastReadWhitespace && inner.Parser.WhitespaceParser == Parser.WhitespaceParser;
 
             inner.Dispose();
         }
@@ -511,6 +517,7 @@ namespace Facepunch.Parse
             Length = 0;
             TrimmedLength = 0;
             ErrorType = ParseError.None;
+            LastReadWhitespace = false;
 
             _success = false;
             _source = null;
