@@ -125,6 +125,8 @@ namespace Facepunch.Parse
         public int Length { get; private set; }
         public int TrimmedLength { get; private set; }
 
+        internal int WhitespaceIndex { get; set; } = -1;
+
         public int LineNumber
         {
             get
@@ -244,6 +246,7 @@ namespace Facepunch.Parse
         {
             Init( parent.Source, parser );
             TrimmedIndex = Index = parent.Index + parent.Length;
+            WhitespaceIndex = parent.Parser.WhitespaceParser == parser.WhitespaceParser ? parent.WhitespaceIndex : -1;
         }
 
         private bool IsIdentical( ParseResult other )
