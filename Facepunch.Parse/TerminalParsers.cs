@@ -47,6 +47,8 @@ namespace Facepunch.Parse
 
     public sealed class RegexParser : Parser
     {
+        public static bool Compiled { get; set; } = true;
+
         public Regex Regex { get; }
         public override bool OmitFromResult => true;
 

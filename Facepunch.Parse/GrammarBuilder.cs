@@ -298,7 +298,7 @@ namespace Facepunch.Parse
                 }
             }
 
-            var parsedOptions = RegexOptions.None;
+            var parsedOptions = RegexParser.Compiled ? RegexOptions.Compiled : RegexOptions.None;
             for ( var i = 0; i < options.Length; ++i )
             {
                 switch ( options.Value[i] )

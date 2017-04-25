@@ -31,17 +31,21 @@ namespace Facepunch.Parse
 
         protected override Parser OnDefine()
         {
-            this[Ignore] = Whitespace | SingleLineComment | MultiLineComment;
-            this[Whitespace] = new Regex( @"\s" );
-            this[SingleLineComment] = new Regex( @"//[^\n]*(\n|$)" );
-            this[MultiLineComment] = new Regex( @"/\*([^*]|\*[^/])*\*/" );
+            var regexOptions = RegexParser.Compiled
+                ? System.Text.RegularExpressions.RegexOptions.Compiled
+                : System.Text.RegularExpressions.RegexOptions.None;
 
-            this[NonTerminal] = new Regex( @"[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*", System.Text.RegularExpressions.RegexOptions.IgnoreCase );
+            this[Ignore] = Whitespace | SingleLineComment | MultiLineComment;
+            this[Whitespace] = new Regex( @"\s", regexOptions );
+            this[SingleLineComment] = new Regex( @"//[^\n]*(\n|$)", regexOptions);
+            this[MultiLineComment] = new Regex( @"/\*([^*]|\*[^/])*\*/", regexOptions);
+
+            this[NonTerminal] = new Regex( @"[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*", System.Text.RegularExpressions.RegexOptions.IgnoreCase | regexOptions);
             this[String] = "\"" + StringValueDouble + "\"" | "'" + StringValueSingle + "'" ;
-            this[StringValueSingle] = new Regex( @"(\\[\\rnt']|[^\\'])*" );
-            this[StringValueDouble] = new Regex( @"(\\[\\""rnt]|[^\\""])*" );
+            this[StringValueSingle] = new Regex( @"(\\[\\rnt']|[^\\'])*", regexOptions);
+            this[StringValueDouble] = new Regex( @"(\\[\\""rnt]|[^\\""])*", regexOptions);
             this[Regex] = "/" + RegexValue + "/" + RegexOptions;
-            this[RegexValue] = new Regex( @"(\\.|\[[^\]]+\]|[^\\[/])+" );
+            this[RegexValue] = new Regex( @"(\\.|\[[^\]]+\]|[^\\[/])+", regexOptions);
             this[RegexOptions] = RegexOption.Repeated.Optional;
             this[RegexOption] = "i";
 

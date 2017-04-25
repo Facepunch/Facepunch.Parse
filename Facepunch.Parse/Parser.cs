@@ -11,6 +11,8 @@ namespace Facepunch.Parse
         private static ParseResultPool _sResultPool;
         internal static ParseResultPool ResultPool => _sResultPool ?? (_sResultPool = new ParseResultPool());
 
+        public static int CreatedNew => ResultPool.CreatedNew;
+        public static int CreatedPooled => ResultPool.CreatedPooled;
         public static double PooledRatio => ResultPool.PooledRatio;
 
         public static void ResetPooledCounter()
@@ -32,7 +34,7 @@ namespace Facepunch.Parse
         private static readonly CollapseStateDisposable _sCollapseStateDisposable = new CollapseStateDisposable();
         protected static bool CurrentCollapseState => CollapseStateStack.Count != 0 && CollapseStateStack.Peek();
 
-        public static Parser EndOfInput { get; } = new RegexParser( new Regex( "$" ) );
+        public static Parser EndOfInput { get; } = new RegexParser( new Regex( "$", RegexParser.Compiled ? RegexOptions.Compiled : RegexOptions.None) );
 
         private class WhitespaceDisposable : IDisposable
         {
