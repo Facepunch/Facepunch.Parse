@@ -123,6 +123,8 @@ namespace Facepunch.Parse
 
         public ParseResult Parse( string source )
         {
+            _sLastSourceIndex = -1;
+
             var result = new ParseResult( ResultPool );
             result.Init( source, this );
 
@@ -150,15 +152,23 @@ namespace Facepunch.Parse
 
         protected abstract bool OnParse( ParseResult result, bool errorPass );
 
+        [ThreadStatic] private static int _sLastSourceIndex;
+        [ThreadStatic] private static Parser _sLastWhitespaceParser;
+
         private void SkipWhitespace(ParseResult result)
         {
             if ( _whitespaceParser == null ) return;
+
+            if ( _sLastSourceIndex == result.Index && _sLastWhitespaceParser == _whitespaceParser ) return;
 
             ParseResult whitespace;
             while ( (whitespace = result.Peek( _whitespaceParser, false )).Success && whitespace.Length > 0 )
             {
                 result.Skip( whitespace );
             }
+
+            _sLastSourceIndex = result.Index;
+            _sLastWhitespaceParser = _whitespaceParser;
 
             whitespace.Dispose();
         }
