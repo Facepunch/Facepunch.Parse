@@ -6,7 +6,12 @@ using System.Text;
 
 namespace Facepunch.Parse
 {
-    public sealed class RepeatedParser : Parser
+    public interface IUnaryParser
+    {
+        Parser Inner { get; }
+    }
+
+    public sealed class RepeatedParser : Parser, IUnaryParser
     {
         private readonly Parser _inner;
 

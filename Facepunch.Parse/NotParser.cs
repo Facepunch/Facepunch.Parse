@@ -9,6 +9,8 @@ namespace Facepunch.Parse
     {
         private readonly Parser _inner;
 
+        public Parser Inner => _inner;
+
         public override bool OmitFromResult => true;
 
         public NotParser( Parser inner )

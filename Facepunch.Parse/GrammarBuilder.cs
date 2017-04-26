@@ -67,6 +67,8 @@ namespace Facepunch.Parse
 
         public NamedParser this[ string name ] => _namedParsers[name];
 
+        public IEnumerable<string> ParserNames => _namedParsers.Keys;
+
         public override string ToString()
         {
             return string.Join( Environment.NewLine,
@@ -86,6 +88,7 @@ namespace Facepunch.Parse
                 var existing = GetExisting( named.Name );
                 if ( existing != null )
                 {
+                    named.ResolvedName = existing.Name;
                     named.Define( existing.ResolvedParser, existing.CollapseIfSingleElement );
                     return true;
                 }
@@ -100,7 +103,7 @@ namespace Facepunch.Parse
                 var existing = GetExisting( name );
                 if ( existing != null )
                 {
-                    named.ResolvedName = name;
+                    named.ResolvedName = existing.Name;
                     named.Define( existing.ResolvedParser, existing.CollapseIfSingleElement );
                     return true;
                 }
