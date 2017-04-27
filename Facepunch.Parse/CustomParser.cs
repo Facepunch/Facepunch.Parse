@@ -21,7 +21,7 @@ namespace Facepunch.Parse
                 var val = field.GetValue( this );
                 if ( val != null ) continue;
 
-                field.SetValue( this, new NamedParser( field.Name ) );
+                field.SetValue( this, new NamedParser( field.Name.Replace( '_', '.' ) ) );
             }
 
             _definedParser = OnDefine();
