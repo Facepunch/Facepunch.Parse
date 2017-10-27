@@ -346,10 +346,10 @@ namespace Facepunch.Parse
             return false;
         }
 
-        private void AddInner( ParseResult result, bool errorPass )
+        private void AddInner( ParseResult result, bool errorPass, bool updateParsedLength )
         {
             var len = result.ReadPos - Index;
-            if ( Length < len )
+            if ( Length < len && updateParsedLength )
             {
                 Length = len;
                 TrimmedLength = result.Index + result.TrimmedLength - TrimmedIndex;
@@ -381,7 +381,7 @@ namespace Facepunch.Parse
 
             foreach ( var inner in result )
             {
-                AddInner( inner, errorPass );
+                AddInner( inner, errorPass, updateParsedLength );
             }
 
             result.Dispose();
@@ -395,14 +395,14 @@ namespace Facepunch.Parse
             return false;
         }
 
-        public bool Error( ParseResult inner, bool errorPass )
+        public bool Error( ParseResult inner, bool errorPass, bool updateParsedLength = true )
         {
             _success = false;
             if ( ErrorType == ParseError.None )
             {
                 ErrorType = ParseError.SubParser;
             }
-            AddInner( inner, errorPass );
+            AddInner( inner, errorPass, updateParsedLength );
             return false;
         }
 
@@ -468,7 +468,7 @@ namespace Facepunch.Parse
         {
             if ( inner.Index != ReadPos ) throw new ArgumentException();
 
-            AddInner( inner, errorPass );
+            AddInner( inner, errorPass, true );
         }
 
         public ParseResult Peek( Parser parser, bool errorPass )

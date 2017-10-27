@@ -197,21 +197,44 @@ namespace Facepunch.Parse
         {
             Debug.Assert( modifier.Parser == Parser.Modifier );
 
-            if ( modifier.InnerCount == 1 ) return ReadTerm( modifier[0], rules );
+            var prefix = modifier.FirstOrDefault( x => x.Parser == Parser.ModifierPrefix );
+            var term = ReadTerm( modifier.First( x => x.Parser == Parser.Term ), rules );
+            var postfix = modifier.FirstOrDefault( x => x.Parser == Parser.ModifierPostfix );
 
-            var term = ReadTerm( modifier[0], rules );
-
-            switch ( modifier[1].Value )
+            if ( prefix != null )
             {
-                case "?":
-                    return term | "";
-                case "+":
-                    return term.Repeated;
-                case "*":
-                    return term.Repeated.Optional;
-                default:
-                    throw new Exception( $"Unrecognised modifier '{modifier[0].Value}'." );
+                switch ( prefix.Value )
+                {
+                    case "$":
+                        term = term.Strict;
+                        break;
+                    case "!":
+                        term = term.Not;
+                        break;
+                    default:
+                        throw new Exception( $"Unrecognised modifier '{prefix.Value}'." );
+                }
             }
+
+            if ( postfix != null )
+            {
+                switch ( postfix.Value )
+                {
+                    case "?":
+                        term = term.Optional;
+                        break;
+                    case "+":
+                        term = term.Repeated;
+                        break;
+                    case "*":
+                        term = term.Repeated.Optional;
+                        break;
+                    default:
+                        throw new Exception( $"Unrecognised modifier '{postfix.Value}'." );
+                }
+            }
+
+            return term;
         }
 
         private static Parser ReadTerm( ParseResult term, NamedParserCollection rules )

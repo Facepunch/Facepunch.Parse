@@ -17,6 +17,7 @@ namespace Facepunch.Parse
         public NamedParser Branch;
         public NamedParser Concat;
         public NamedParser Modifier;
+        public NamedParser ModifierPrefix;
         public NamedParser ModifierPostfix;
         public NamedParser Term;
         public NamedParser NonTerminal;
@@ -59,7 +60,8 @@ namespace Facepunch.Parse
                                    (";" | "{" + StatementBlock + "}");
                 this[Branch] = Concat + ("|" + Concat).Repeated.Optional;
                 this[Concat] = Modifier.Repeated;
-                this[Modifier] = Term + ModifierPostfix.Optional;
+                this[Modifier] = ModifierPrefix.Optional + Term + ModifierPostfix.Optional;
+                this[ModifierPrefix] = (Parser) "!" | "$";
                 this[ModifierPostfix] = (Parser) "?" | "*" | "+";
                 this[Term] = String | Regex | NonTerminal | "(" + Branch + ")";
             }

@@ -235,6 +235,11 @@ namespace Facepunch.Parse
             get { return this | ""; }
         }
 
+        public Parser Strict
+        {
+            get { return new StrictParser( this ); }
+        }
+
         public Parser Not
         {
             get { return !this; }

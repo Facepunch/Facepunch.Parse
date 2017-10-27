@@ -57,5 +57,21 @@ namespace Facepunch.Parse.Test
                 }
             ", true );
         }
+
+        [TestMethod]
+        public void GrammarParserComplex2()
+        {
+            TestHelper.Test( new GrammarParser(), @"
+                Whitespace = /\s+/;
+                Word = /[a-z]+/i;
+                EndOfInput = /$/;
+
+                ignore Whitespace
+                {
+                    Document = Expr ('&&' Document | EndOfInput);
+                    Expr = Word ('&' Expr)?;
+                }
+            ", true );
+        }
     }
 }

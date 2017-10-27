@@ -106,6 +106,29 @@ namespace Facepunch.Parse.Test
             TestHelper.Test( GetGrammar3()["Document"], "Hello( World() ), How( Are( You(), Today() ), Foo() )", true );
         }
 
+        private NamedParserCollection GetGrammar5()
+        {
+            return GrammarBuilder.FromString(@"
+                Whitespace = /\s+/;
+                Word = /[a-z]+/i;
+                EndOfInput = /$/;
+
+                ignore Whitespace
+                {
+                    Document = Conditional EndOfInput;
+                    Conditional = Logical $('&&' Conditional)?;
+                    Logical = Term $('&' Logical)?;
+                    Term = Word | '(' Conditional ')';
+                }
+            ");
+        }
+        
+        [TestMethod]
+        public void GrammarBuilder9()
+        {
+            TestHelper.Test( GetGrammar5()["Document"], "A & B && C && D & E", true );
+        }
+
         private NamedParserCollection GetGrammar4()
         {
             return GrammarBuilder.FromString(@"
