@@ -61,6 +61,10 @@ namespace Facepunch.Parse
                 {
                     writer.Write( $".{nameof( Parser.Repeated )}" );
                 }
+                else if ( parser is StrictParser )
+                {
+                    writer.Write( $".{nameof( Parser.Strict )}" );
+                }
 
                 return;
             }

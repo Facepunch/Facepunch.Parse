@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Facepunch.Parse
 {
-    public class NotParser : Parser
+    public class NotParser : Parser, IUnaryParser
     {
         private readonly Parser _inner;
 
@@ -24,6 +24,11 @@ namespace Facepunch.Parse
             {
                 return !peeked.Success;
             }
+        }
+
+        public override string ToString()
+        {
+            return $"!{Inner}";
         }
     }
 }

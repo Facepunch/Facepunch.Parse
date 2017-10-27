@@ -36,9 +36,9 @@ ignore Whitespace | Comment
             Conditional = ConditionalOr (Operator.Conditional.IfThen Conditional Operator.Conditional.Else Conditional | "");
             ConditionalOr   = ConditionalAnd  (Operator.ConditionalOr  ConditionalOr | "");
             ConditionalAnd  = LogicalOr       (Operator.ConditionalAnd ConditionalAnd | "");
-            LogicalOr       = LogicalXor      (Operator.LogicalOr      LogicalOr | "");
+            LogicalOr       = LogicalXor      $(Operator.LogicalOr      LogicalOr | "");
             LogicalXor      = LogicalAnd      (Operator.LogicalXor     LogicalXor | "");
-            LogicalAnd      = Equality        (Operator.LogicalAnd     LogicalAnd | "");
+            LogicalAnd      = Equality        $(Operator.LogicalAnd     LogicalAnd | "");
             Equality        = Relational      (Operator.Equality       Equality | "");
             Relational      = Shift           (Operator.Relational     Relational | "");
             Shift           = Additive        (Operator.Shift          Shift | "");

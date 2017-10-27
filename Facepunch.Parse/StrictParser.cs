@@ -1,8 +1,10 @@
 ﻿namespace Facepunch.Parse
 {
-    public class StrictParser : Parser
+    public class StrictParser : Parser, IUnaryParser
     {
         private readonly Parser _inner;
+
+        public Parser Inner => _inner;
 
         public override bool FlattenHierarchy => true;
 
