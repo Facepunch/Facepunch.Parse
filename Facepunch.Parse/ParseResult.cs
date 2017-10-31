@@ -481,9 +481,12 @@ namespace Facepunch.Parse
 
         public bool IsBetterThan( ParseResult other )
         {
+            var thisEnd = TrimmedIndex + TrimmedLength;
+            var otherEnd = other == null ? -1 : other.TrimmedIndex + other.TrimmedLength;
+
             return other == null ||
                    ErrorType != ParseError.NullParser &&
-                   (ReadPos > other.ReadPos || ReadPos == other.ReadPos && Success && !other.Success) ||
+                   (thisEnd > otherEnd || thisEnd == otherEnd && Success && !other.Success) ||
                    other.ErrorType == ParseError.NullParser;
         }
 

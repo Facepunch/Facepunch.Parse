@@ -116,7 +116,7 @@ namespace Facepunch.Parse.Test
                 ignore Whitespace
                 {
                     Document = Conditional EndOfInput;
-                    Conditional = Logical $('&&' Conditional)?;
+                    Conditional = Logical ('&&' Conditional)?;
                     Logical = Term $('&' Logical)?;
                     Term = Word | '(' Conditional ')';
                 }
