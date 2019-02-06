@@ -110,6 +110,8 @@ namespace Facepunch.Parse
             {
                 var branch = (BranchParser) parser;
 
+                if (precedence > branchPrecedence) writer.Write("(");
+
                 if ( branch.Inner.All( x => x is TokenParser || x is RegexParser || x is EmptyParser ) )
                 {
                     writer.Write( "(" );
@@ -117,7 +119,6 @@ namespace Facepunch.Parse
                     writer.Write( ") " );
                 }
 
-                if ( precedence > branchPrecedence ) writer.Write( "(" );
                 var first = true;
                 foreach ( var inner in branch.Inner )
                 {
@@ -132,6 +133,8 @@ namespace Facepunch.Parse
 
             if ( parser is ConcatParser )
             {
+                if (precedence > concatPrecedence) writer.Write("(");
+
                 var concat = (ConcatParser) parser;
                 if ( concat.Inner.All( x => x is TokenParser || x is RegexParser || x is EmptyParser ) )
                 {
@@ -139,8 +142,6 @@ namespace Facepunch.Parse
                     writer.Write( typeof(Parser) );
                     writer.Write( ") " );
                 }
-
-                if ( precedence > concatPrecedence ) writer.Write( "(" );
                 var first = true;
                 foreach ( var inner in concat.Inner )
                 {
