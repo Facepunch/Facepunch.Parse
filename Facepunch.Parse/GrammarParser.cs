@@ -40,7 +40,7 @@ namespace Facepunch.Parse
                 : System.Text.RegularExpressions.RegexOptions.None;
 
             this[NonTerminal] = new Regex( @"[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase | regexOptions );
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant | regexOptions );
             this[String] = "\"" + StringValueDouble + "\"" | "'" + StringValueSingle + "'";
             this[StringValueSingle] = new Regex( @"(\\[\\rnt']|[^\\'])*", regexOptions );
             this[StringValueDouble] = new Regex( @"(\\[\\""rnt]|[^\\""])*", regexOptions );

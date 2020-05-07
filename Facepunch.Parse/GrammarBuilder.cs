@@ -330,7 +330,7 @@ namespace Facepunch.Parse
                 switch ( options.Value[i] )
                 {
                     case 'i':
-                        parsedOptions |= RegexOptions.IgnoreCase;
+                        parsedOptions |= RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
                         break;
                 }
             }
